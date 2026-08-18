@@ -10,7 +10,7 @@ meeting never asks: **can this evidence decide the sign at all?**
 <!-- /figures:finding -->
 
 **[Try it in your browser →](https://arslanesempai-ui.github.io/growth-versus-controls/)** —
-three sliders, one per thing the two functions actually disagree about. Nothing is uploaded.
+grab the point on the map and read the verdict where you put it. Nothing is uploaded.
 
 ![The same decision, from both sides](images/demo.gif)
 

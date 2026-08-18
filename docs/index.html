@@ -14,8 +14,9 @@
   </div>
 
   <p class="renvoi" style="margin-bottom:1.5rem">
-This is the whole model, running in your browser — no server, nothing uploaded. Move the
-three sliders: they are the three things the two functions actually disagree about.
+This is the whole model, running in your browser — no server, nothing uploaded.
+<b>Grab the point on the map</b> and read the verdict where you put it: its two axes are
+the numbers nobody measures, and the whole argument turns on them.
 <a href="https://github.com/ArslaneSempai-ui/growth-versus-controls">Source and method</a>.
 </p>
   <div class="renvoi" id="bandeau"></div>
@@ -240,11 +241,31 @@ function blocCarte() {
     <div class="suite">${L.suiteCarte(pc(d.bascule), pc(d.partPourLeChangement, 0))} ${phrase}</div>
   </div></section>`;
 
-  /* Le geste : on attrape le point, tout se recalcule. */
-  saisir($("#bascule"), async ({ x, y }) => {
-    etat = await api("/api/reglage", { partNonDetectee: x, coutRisqueNonDetecte: y });
+  /*
+   * Le geste : on attrape le point, tout se recalcule.
+   *
+   * Un envoi à la fois, et le dernier demandé n'est pas jeté : sans ça, les appels partis
+   * pendant un aller-retour se perdaient et l'écran restait en arrière de la main. Le
+   * clavier a sa place aussi — une carte qu'on ne peut atteindre qu'à la souris n'est une
+   * commande que pour une partie des lecteurs.
+   */
+  saisir($("#bascule"), poserPoint,
+    { x: etat.situation.partNonDetectee, y: etat.situation.coutRisqueNonDetecte, nom: L.figCarteTitre });
+}
+
+/* Un envoi à la fois, et le dernier demandé n'est pas jeté : sinon les appels partis
+ * pendant un aller-retour se perdent et l'écran reste en arrière de la main. */
+let occupeCarte = false, carteEnAttente = null;
+async function poserPoint(p) {
+  if (occupeCarte) { carteEnAttente = p; return; }
+  occupeCarte = true;
+  try {
+    etat = await api("/api/reglage", { partNonDetectee: p.x, coutRisqueNonDetecte: p.y });
     dessiner();
-  });
+  } finally {
+    occupeCarte = false;
+    if (carteEnAttente) { const suite = carteEnAttente; carteEnAttente = null; poserPoint(suite); }
+  }
 }
 
 function blocLeviers() {
@@ -273,10 +294,16 @@ function blocReglages() {
       <span class="lecture" id="${id}Val">${esc(affiche)}</span>
     </div>`;
 
+  /*
+   * Deux réglages ont quitté ce bloc : la part non détectée et le prix d'un incident.
+   *
+   * Ce sont les deux axes de la carte, et la carte se prend à la main. Les laisser ici en
+   * double, c'était proposer deux façons de dire la même chose — dont une qui ne montre
+   * rien. Restent les trois entrées qu'aucune figure ne porte : la capacité déjà libre, et
+   * les deux bords de la fourchette que les deux fonctions défendent.
+   */
   $("#reglages").innerHTML = `<section class="feuillet"><div class="corps">
-    ${curseur("part", L.reglagePart, s.partNonDetectee, b.partNonDetectee, 0.0005, pc(s.partNonDetectee))}
     ${curseur("heures", L.reglageHeures, s.heuresLibres, b.heuresLibres, 100, nb(s.heuresLibres) + " h")}
-    ${curseur("cout", L.reglageCout, s.coutRisqueNonDetecte, b.coutRisqueNonDetecte, 10000, dollars(s.coutRisqueNonDetecte))}
     ${curseur("cbas", L.reglageCroyanceBas, s.croyance.bas, b.partNonDetectee, 0.0005, pc(s.croyance.bas))}
     ${curseur("chaut", L.reglageCroyanceHaut, s.croyance.haut, b.partNonDetectee, 0.0005, pc(s.croyance.haut))}
     <div class="rang" style="margin-top:14px"><button class="b" id="remise" type="button">${esc(L.remise)}</button></div>
@@ -288,9 +315,7 @@ function blocReglages() {
     el.oninput = () => { $("#" + id + "Val").textContent = affiche(Number(el.value)); };
     el.onchange = () => envoyer({ [cle]: Number(el.value) });
   };
-  brancherCurseur("part", "partNonDetectee", (v) => pc(v));
   brancherCurseur("heures", "heuresLibres", (v) => nb(v) + " h");
-  brancherCurseur("cout", "coutRisqueNonDetecte", (v) => dollars(v));
   brancherCurseur("cbas", "croyanceBas", (v) => pc(v));
   brancherCurseur("chaut", "croyanceHaut", (v) => pc(v));
   $("#remise").onclick = async () => { etat = await api("/api/remise", {}); dessiner(); };

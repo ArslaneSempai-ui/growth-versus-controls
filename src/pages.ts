@@ -74,8 +74,9 @@ window.LOCAL = async (chemin, corps) => {
 ` + "</" + "script>\n";
 
 const BANNIERE = `<p class="renvoi" style="margin-bottom:1.5rem">
-This is the whole model, running in your browser — no server, nothing uploaded. Move the
-three sliders: they are the three things the two functions actually disagree about.
+This is the whole model, running in your browser — no server, nothing uploaded.
+<b>Grab the point on the map</b> and read the verdict where you put it: its two axes are
+the numbers nobody measures, and the whole argument turns on them.
 <a href="https://github.com/ArslaneSempai-ui/growth-versus-controls">Source and method</a>.
 </p>`;
 

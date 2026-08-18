@@ -1,9 +1,12 @@
-{
-  "images": [
-    { "sortie": "images/demo.gif", "type": "gif", "taille": [900, 700], "echelle": 1, "duree": 1100,
-      "fenetre": [900, 2600], "depart": 150, "hauteurUtile": 700,
-      "scenes": [ [], ["#part=0.006"], ["#part=0.018"], ["#part=0.030"], ["#part=0.012", "#heures=0"] ] },
-    { "sortie": "images/screen.png", "type": "png", "taille": [1100, 2600], "echelle": 2,
-      "depart": 150, "hauteurUtile": 780 }
-  ]
-}
+{ "images": [
+  { "sortie": "images/screen.png", "type": "png", "taille": [1100, 2600], "echelle": 2,
+    "depart": 150, "hauteurUtile": 780 },
+  { "sortie": "images/demo.gif", "type": "gif", "taille": [900, 620], "echelle": 2,
+    "duree": 1200, "fenetre": [1100, 2600], "depart": 150, "hauteurUtile": 760,
+    "scenes": [
+      ["#bascule .carte-prise~0.20,0.55"],
+      ["#bascule .carte-prise~0.45,0.55"],
+      ["#bascule .carte-prise~0.70,0.35"],
+      ["#bascule .carte-prise~0.85,0.15"]
+    ] }
+] }
