@@ -11,7 +11,6 @@
 <main>
   <div class="haut">
     <div><h1 id="h1"></h1><p class="lede" id="lede"></p></div>
-    <div class="lang"><button id="fr" type="button">FR</button><button id="en" type="button">EN</button></div>
   </div>
 
   <p class="renvoi" style="margin-bottom:1.5rem">
@@ -26,9 +25,6 @@ three sliders: they are the three things the two functions actually disagree abo
   <h2 id="titreBascule"></h2>
   <div id="bascule"></div>
 
-  <h2 id="titreEscalier"></h2>
-  <div id="escalier"></div>
-
   <h2 id="titreLeviers"></h2>
   <div id="leviers"></div>
 
@@ -40,8 +36,7 @@ three sliders: they are the three things the two functions actually disagree abo
 
 <script type="module">
 import { CAS } from "./js/situation.js";
-import { arbitrer, bascule, ceQuiTrancherait, clientsGagnes, desaccordReel, ecartConversion, heuresParClient } from "./js/arbitrage.js";
-import { ASSUMPTIONS as CAPACITE } from "./js/emprunts/economics/model.js";
+import { arbitrer, bascule, ceQuiTrancherait, desaccordReel, ecartConversion } from "./js/arbitrage.js";
 
 /* Les mêmes bornes que le serveur : une saisie absurde produit un verdict qui a l'air de
  * sortir du modèle alors qu'il sort de la saisie. */
@@ -53,35 +48,31 @@ const BORNES = {
 
 let situation = structuredClone(CAS);
 
-function escalier(s) {
-  const c = clientsGagnes(s);
-  const heuresParAnalyste = CAPACITE.productiveHoursPerDay * CAPACITE.workingDaysPerYear;
-  const clientsParAnalyste = heuresParAnalyste / Math.max(heuresParClient(s), 1e-9);
-  const clientsGratuits = Math.max(0, s.heuresLibres) / Math.max(heuresParClient(s), 1e-9);
-  const haut = Math.max(c.haut, 1);
-  const marches = [];
-  let de = 0;
-  for (let n = 0; de < haut && n < 40; n++) {
-    const a = n === 0 ? clientsGratuits : clientsGratuits + n * clientsParAnalyste;
-    marches.push({ de, a: Math.min(a, haut * 1.15), valeur: n * CAPACITE.loadedCostPerAnalyst,
-      ici: c.centre >= de && c.centre < a, gratuite: n === 0 });
-    de = a;
+const RESOLUTION = { x: 46, y: 29 };
+function champ(s) {
+  const [px0, px1] = BORNES.partNonDetectee;
+  const [py0, py1] = BORNES.coutRisqueNonDetecte;
+  const out = [];
+  for (let j = 0; j < RESOLUTION.y; j++) {
+    const cout = py0 + ((j + 0.5) / RESOLUTION.y) * (py1 - py0);
+    for (let i = 0; i < RESOLUTION.x; i++) {
+      const part = px0 + ((i + 0.5) / RESOLUTION.x) * (px1 - px0);
+      out.push(arbitrer({ ...s, coutRisqueNonDetecte: cout }, part).net.centre >= 0);
+    }
   }
-  return { marches, clientsParAnalyste, clientsGratuits };
+  return out;
 }
 
 const etat = () => ({
   situation,
   bornes: BORNES,
-  inventaire: [],
   ecart: ecartConversion(situation),
   verdict: arbitrer(situation),
   bascule: bascule(situation),
   desaccord: desaccordReel(situation),
   leviers: ceQuiTrancherait(situation),
-  escalier: escalier(situation),
-  capacite: { coutAnalyste: CAPACITE.loadedCostPerAnalyst,
-    heuresParAnalyste: CAPACITE.productiveHoursPerDay * CAPACITE.workingDaysPerYear },
+  champ: champ(situation),
+  resolution: RESOLUTION,
 });
 
 window.LOCAL = async (chemin, corps) => {
@@ -101,7 +92,7 @@ window.LOCAL = async (chemin, corps) => {
 };
 </script>
 <script type="module">
-import { axe, barres, escalier as figEscalier, opposees, brancher } from "./graphes.js";
+import { carte, opposees, saisir, brancher } from "./graphes.js";
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 
@@ -121,61 +112,6 @@ const api = async (chemin, corps) => {
 };
 
 const T = {
-  fr: {
-    h1: "Les deux ont raison, et ça ne suffit pas",
-    lede: "La croissance apporte un test, la conformité apporte une projection. Personne ne les met sur le même axe.",
-    bandeau: "Tout tourne dans ton navigateur. Le test A/B est <b>mesuré</b> ; la part de risque non détecté est <b>supposée</b>, parce que ce sont les dossiers qu'on n'a jamais ouverts. Les deux ne se lisent pas de la même façon.",
-
-    titreVerdict: "Ce que le changement vaut, des deux côtés",
-    figVerdictTitre: "La même décision, en dollars par an",
-    figVerdictAria: "Trois barres avec leurs intervalles : ce que la croissance gagne, ce que le contrôle coûte, et le net.",
-    croissance: "ce que la croissance gagne",
-    controle: "ce que le contrôle coûte",
-    net: "net",
-    suiteTranchable: (sens, bas, haut) => `Le signe tient sur tout l'intervalle : <b>${sens}</b>. Entre ${bas} et ${haut} par an.`,
-    suiteNonTranchable: "<b>L'intervalle contient zéro.</b> Ces preuves ne peuvent pas décider du sens. Tout ce qu'on peut dire honnêtement, c'est qu'on ne sait pas.",
-    suiteSigne: (par) => par === "le test"
-      ? "Et c'est le test qui en décide."
-      : "Attention : ce n'est <b>pas</b> le test qui décide de ce signe, ce sont les hypothèses. Le test fixe l'ampleur.",
-
-    titreBascule: "Le seul nombre que personne ne mesure",
-    figBasculeTitre: "La part de risque non détecté, et l'endroit où le signe change",
-    figBasculeAria: "Un axe de la part de risque non détecté parmi les clients gagnés. La bascule est marquée, et la fourchette que les deux fonctions défendent est encadrée.",
-    basculeA: (v) => `bascule · ${v}`,
-    basculeAvant: "le changement paie",
-    basculeApres: "le contrôle a raison",
-    zonePaie: (a, b) => `${a} – ${b} : le changement paie`,
-    zoneControle: (a, b) => `${a} – ${b} : le contrôle a raison`,
-    defendu: (a, b) => `Les deux fonctions défendent la même fourchette, ${a} – ${b} ; la bascule la coupe en deux.`,
-    motRecouvrement: "les deux positions tiennent",
-    suiteBascule: (part, phrase) => `<b>${part} de la fourchette défendue</b> penche pour le changement. ${phrase}`,
-    dedansOui: "Les deux positions sont cohérentes : ce désaccord se règle par une mesure, pas par une réunion.",
-    dedansNonBas: "Même la lecture la plus optimiste donne raison au contrôle.",
-    dedansNonHaut: "Même la lecture la plus prudente donne raison au changement.",
-
-    titreEscalier: "La capacité s'achète entière",
-    figEscalierTitre: "Ce que le contrôle coûte, en fonction des clients gagnés",
-    figEscalierAria: "Une fonction en marches : sous la capacité déjà payée le coût est nul, puis chaque analyste supplémentaire ajoute un salaire entier.",
-    suiteEscalier: (bas, haut) => `L'intervalle du test va de <b>${bas}</b> à <b>${haut}</b> analyste(s) à embaucher. Le même test dit à la fois « ça ne coûte rien de plus » et « ça coûte un salaire » — ce n'est pas une contradiction, c'est une marche.`,
-    suiteEscalierPlat: "L'intervalle du test tient entier dans une seule marche : la capacité n'est pas le sujet ici.",
-
-    titreLeviers: "Ce qui trancherait, et ce qui ne trancherait pas",
-    figLeviersTitre: "Largeur de l'intervalle restante, après chaque effort",
-    figLeviersAria: "Deux barres comparant la largeur d'intervalle qui subsiste après avoir agrandi le test, ou après avoir mesuré l'hypothèse.",
-    tranche: "tranche",
-    tranchePas: "ne tranche pas",
-    suiteLeviers: "Agrandir le test est ce que la salle réclame toujours. Ici il resserre un intervalle dont le signe n'a jamais dépendu.",
-
-    titreReglages: "Les trois désaccords, réglables",
-    reglagePart: "part de risque non détecté parmi les clients gagnés",
-    reglageHeures: "heures d'analyste déjà payées et libres, par an",
-    reglageCout: "ce que coûte un incident non détecté",
-    reglageCroyanceBas: "borne basse de ce qui est défendu",
-    reglageCroyanceHaut: "borne haute de ce qui est défendu",
-    remise: "Revenir au cas de départ",
-    provenance: "mesuré · supposé · choisi — chaque entrée porte sa provenance, et l'incertitude du verdict vient d'abord des supposées.",
-  },
-  en: {
     h1: "Both sides are right, and that isn't enough",
     lede: "Growth brings a test, controls bring a projection. Nobody puts them on the same axis.",
     bandeau: "Everything runs in your browser. The A/B test is <b>measured</b>; the undetected-risk share is <b>assumed</b>, because those are the files nobody ever opened. The two do not read the same way.",
@@ -192,30 +128,23 @@ const T = {
       ? "And it is the test that decides it."
       : "Careful: that sign is <b>not</b> decided by the test — it is decided by the assumptions. The test sets the size.",
 
-    titreBascule: "The one number nobody measures",
-    figBasculeTitre: "The undetected-risk share, and where the sign flips",
-    figBasculeAria: "An axis of the undetected-risk share among gained customers. The flip point is marked, and the range both functions defend is shaded.",
-    basculeA: (v) => `flips at · ${v}`,
-    basculeAvant: "the change pays",
-    basculeApres: "the controls are right",
-    zonePaie: (a, b) => `${a} – ${b}: the change pays`,
-    zoneControle: (a, b) => `${a} – ${b}: the controls win`,
-    defendu: (a, b) => `Both functions defend the same range, ${a} – ${b}; the flip point cuts it in two.`,
-    motRecouvrement: "both positions hold",
-    suiteBascule: (part, phrase) => `<b>${part} of the defended range</b> favours the change. ${phrase}`,
     dedansOui: "Both positions are coherent: this disagreement is settled by a measurement, not by a meeting.",
     dedansNonBas: "Even the most optimistic reading favours the controls.",
     dedansNonHaut: "Even the most cautious reading favours the change.",
 
-    titreEscalier: "Capacity is bought whole",
-    figEscalierTitre: "What controls cost, against customers gained",
-    figEscalierAria: "A step function: below the capacity already paid for the cost is nil, then each further analyst adds a whole salary.",
-    suiteEscalier: (bas, haut) => `The test's interval runs from <b>${bas}</b> to <b>${haut}</b> analyst(s) to hire. The same test says both "costs nothing extra" and "costs a whole salary" — not a contradiction, a step.`,
-    suiteEscalierPlat: "The test's interval sits entirely inside one step: capacity is not the question here.",
+    titreCarte: "Where are you on the map?",
+    figCarteTitre: "The verdict over both unknowns — grab the point",
+    figCarteAria: "A map of the verdict over two axes: the undetected-risk share and the cost of one incident. The point marks the position taken and can be dragged with mouse or finger.",
+    axeX: "share of gained customers who are an undetected risk",
+    axeY: "cost of one incident",
+    bandeNom: "what both sides defend",
+    clePour: "the change pays",
+    cleContre: "the controls win",
+    geste: "grab the point",
+    suiteCarte: (b, part) => `The frontier runs through <b>${b}</b> at this incident price, and <b>${part}</b> of the defended range favours the change.`,
+    suiteLeviersLong: (l) => `${l}. Enlarging the test is what the room always asks for: here it narrows an interval whose sign never depended on it.`,
 
     titreLeviers: "What would settle it, and what would not",
-    figLeviersTitre: "Interval width left, after each effort",
-    figLeviersAria: "Two bars comparing the interval width that remains after enlarging the test, or after measuring the assumption.",
     tranche: "settles it",
     tranchePas: "does not settle it",
     suiteLeviers: "Enlarging the test is what the room always asks for. Here it narrows an interval whose sign never depended on it.",
@@ -228,16 +157,22 @@ const T = {
     reglageCroyanceHaut: "high end of what is defended",
     remise: "Back to the starting case",
     provenance: "measured · assumed · chosen — every input carries its provenance, and the verdict's uncertainty comes first from the assumed ones.",
-  },
 };
 
-let langue = localStorage.getItem("langue") === "fr" ? "fr" : "en";
-const t = () => T[langue];
+/* Le champ vient du modèle : la page lit, elle ne recalcule pas. */
+const auChamp = (part, cout) => {
+  const [px0, px1] = etat.bornes.partNonDetectee, [py0, py1] = etat.bornes.coutRisqueNonDetecte;
+  const i = Math.min(etat.resolution.x - 1, Math.max(0, Math.floor(((part - px0) / (px1 - px0)) * etat.resolution.x)));
+  const j = Math.min(etat.resolution.y - 1, Math.max(0, Math.floor(((cout - py0) / (py1 - py0)) * etat.resolution.y)));
+  return etat.champ[j * etat.resolution.x + i] === true;
+};
+
+const t = () => T;
 let etat = null;
 
-const dollars = (x) => (x < 0 ? "−" : "") + "$" + Math.round(Math.abs(x)).toLocaleString(langue === "fr" ? "fr-FR" : "en-GB");
+const dollars = (x) => (x < 0 ? "−" : "") + "$" + Math.round(Math.abs(x)).toLocaleString("en-GB");
 const pc = (x, d = 2) => (x * 100).toFixed(d) + " %";
-const nb = (x) => Math.round(x).toLocaleString(langue === "fr" ? "fr-FR" : "en-GB");
+const nb = (x) => Math.round(x).toLocaleString("en-GB");
 
 function blocVerdict() {
   const L = t(), v = etat.verdict;
@@ -261,8 +196,8 @@ function blocVerdict() {
     fmt: dollars, aria: L.figVerdictAria,
   });
 
-  const sens = v.sens === "croissance" ? (langue === "fr" ? "la croissance l'emporte" : "growth wins")
-    : v.sens === "contrôle" ? (langue === "fr" ? "le contrôle l'emporte" : "the controls win") : "";
+  const sens = v.sens === "croissance" ? "growth wins"
+    : v.sens === "contrôle" ? "the controls win" : "";
   const suite = v.tranchable
     ? L.suiteTranchable(sens, dollars(v.net.bas), dollars(v.net.haut))
     : L.suiteNonTranchable;
@@ -273,75 +208,57 @@ function blocVerdict() {
   </div></section>`;
 }
 
-function blocBascule() {
-  const L = t(), d = etat.desaccord, s = etat.situation;
-  $("#titreBascule").textContent = L.titreBascule;
+function blocCarte() {
+  const L = t(), s = etat.situation, d = etat.desaccord;
+  $("#titreBascule").textContent = L.titreCarte;
 
   /*
-   * Les deux camps sur le même axe, et la bascule dedans.
+   * La figure est la commande.
    *
-   * `populations` sert ici à autre chose que des scores : chaque carré est un point de la
-   * fourchette que l'une des deux fonctions est prête à défendre. Le recouvrement dessiné
-   * est l'endroit où les deux positions tiennent en même temps — la seule zone où la
-   * discussion a un sens.
+   * Deux inconnues, deux axes, et le verdict comme territoire : on ne lit pas une valeur, on
+   * pose son établissement quelque part et on lit la réponse à cet endroit. Le curseur qui
+   * servait à régler la part de risque a disparu — piloter à l'aveugle une grandeur qu'on ne
+   * connaît pas était le mauvais geste. Ici la question devient « de quel côté de cette ligne
+   * sommes-nous ? », à laquelle un responsable conformité répond en une phrase.
    */
-  const marge = Math.max((s.croyance.haut - s.croyance.bas) * 0.15, 0.002);
-  const fig = axe({
-    bas: Math.max(0, Math.min(s.croyance.bas, d.bascule) - marge),
-    haut: Math.max(s.croyance.haut, d.bascule) + marge,
-    /* Les bandes portent déjà ce que chaque côté veut dire, avec ses bornes : répéter
-     * « le changement paie » au-dessus de la ligne ne fait que doubler le texte. */
-    seuil: { v: d.bascule, etiquette: L.basculeA(pc(d.bascule)) },
-    bandes: [
-      { de: s.croyance.bas, a: d.bascule, nom: L.zonePaie(pc(s.croyance.bas), pc(d.bascule)) },
-      { de: d.bascule, a: s.croyance.haut, nom: L.zoneControle(pc(d.bascule), pc(s.croyance.haut)), sens: "bas" },
-    ],
-    fmtX: (v) => pc(v, 2),
-    aria: L.figBasculeAria,
+  const fig = carte({
+    x: { de: 0, a: etat.bornes.partNonDetectee[1], nom: L.axeX, fmt: (v) => pc(v, 1) },
+    y: { de: etat.bornes.coutRisqueNonDetecte[0], a: etat.bornes.coutRisqueNonDetecte[1],
+         nom: L.axeY, fmt: (v) => "$" + Math.round(v / 1000) + "k" },
+    verdict: auChamp,
+    ici: { x: s.partNonDetectee, y: s.coutRisqueNonDetecte },
+    bande: { de: s.croyance.bas, a: s.croyance.haut, nom: L.bandeNom },
+    cles: { pour: L.clePour, contre: L.cleContre, geste: L.geste },
+    aria: L.figCarteAria,
   });
 
   const phrase = d.dedans ? L.dedansOui
     : d.bascule <= s.croyance.bas ? L.dedansNonBas : L.dedansNonHaut;
 
   $("#bascule").innerHTML = `<section class="feuillet"><div class="corps">
-    <div class="titre-fig">${esc(L.figBasculeTitre)}</div>${fig}
-    <div class="suite">${L.defendu(pc(s.croyance.bas), pc(s.croyance.haut))} ${L.suiteBascule(pc(d.partPourLeChangement, 0), phrase)}</div>
+    <div class="titre-fig">${esc(L.figCarteTitre)}</div>${fig}
+    <div class="suite">${L.suiteCarte(pc(d.bascule), pc(d.partPourLeChangement, 0))} ${phrase}</div>
   </div></section>`;
-}
 
-function blocEscalier() {
-  const L = t(), v = etat.verdict, e = etat.escalier;
-  $("#titreEscalier").textContent = L.titreEscalier;
-
-  const fig = figEscalier({
-    marches: e.marches.map((m) => ({ de: m.de, a: m.a, valeur: m.valeur, ici: m.ici, gratuite: m.gratuite })),
-    fmt: dollars, fmtX: nb, aria: L.figEscalierAria,
+  /* Le geste : on attrape le point, tout se recalcule. */
+  saisir($("#bascule"), async ({ x, y }) => {
+    etat = await api("/api/reglage", { partNonDetectee: x, coutRisqueNonDetecte: y });
+    dessiner();
   });
-
-  const suite = v.enjambeUneMarche
-    ? L.suiteEscalier(v.analystes.bas, v.analystes.haut)
-    : L.suiteEscalierPlat;
-
-  $("#escalier").innerHTML = `<section class="feuillet"><div class="corps">
-    <div class="titre-fig">${esc(L.figEscalierTitre)}</div>${fig}
-    <div class="suite">${suite}</div>
-  </div></section>`;
 }
 
 function blocLeviers() {
   const L = t();
   $("#titreLeviers").textContent = L.titreLeviers;
-  const fig = barres({
-    items: etat.leviers.map((l) => ({
-      nom: l.quoi, valeur: Math.max(0, l.largeurRestante),
-      ton: l.utile ? "accent" : "neutre",
-      note: l.utile ? L.tranche : L.tranchePas,
-    })),
-    fmt: dollars, aria: L.figLeviersAria,
-  });
+  /*
+   * Ceci était une figure à deux barres. Elle n'expliquait rien que la phrase ne dise, et ne
+   * bougeait pas sous la main : du bruit bien dessiné. Une figure doit expliquer un mécanisme
+   * ou se laisser manipuler ; celle-là ne faisait ni l'un ni l'autre.
+   */
+  const l = etat.leviers;
   $("#leviers").innerHTML = `<section class="feuillet"><div class="corps">
-    <div class="titre-fig">${esc(L.figLeviersTitre)}</div>${fig}
-    <div class="suite">${L.suiteLeviers}</div>
+    <div class="suite">${L.suiteLeviersLong(
+      l.map((x) => `<b>${esc(x.quoi)}</b> — ${x.utile ? L.tranche : L.tranchePas}`).join(" · "))}</div>
   </div></section>`;
 }
 
@@ -380,19 +297,12 @@ function blocReglages() {
 }
 
 function dessiner() {
-  $("#fr").className = langue === "fr" ? "on" : "";
-  $("#en").className = langue === "en" ? "on" : "";
   blocVerdict();
-  blocBascule();
-  blocEscalier();
+  blocCarte();
   blocLeviers();
   blocReglages();
   $("#provenanceLegende").textContent = t().provenance;
   brancher(document);
-}
-
-for (const l of ["fr", "en"]) {
-  $("#" + l).onclick = () => { langue = l; localStorage.setItem("langue", l); dessiner(); };
 }
 
 etat = await api("/api/etat");

@@ -8,7 +8,7 @@
     "start": "node src/server.ts",
     "arbitrer": "node src/arbitrage.ts",
     "figures": "node src/readme.ts",
-    "pages": "tsc -p tsconfig.web.json && node src/pages.ts && node src/verifier-ecran.mjs . 4",
+    "pages": "tsc -p tsconfig.web.json && node src/pages.ts && node src/verifier-ecran.mjs . 2",
     "typecheck": "tsc --noEmit",
     "test": "tsc --noEmit && node src/emprunter.ts --check && node src/readme.ts --check && node --test src/*.test.ts",
     "captures": "node src/capturer.mjs .",

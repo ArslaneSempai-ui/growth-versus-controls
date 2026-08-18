@@ -17,8 +17,7 @@ const root = new URL("..", import.meta.url).pathname;
 
 const SHIM = `<script type="module">
 import { CAS } from "./js/situation.js";
-import { arbitrer, bascule, ceQuiTrancherait, clientsGagnes, desaccordReel, ecartConversion, heuresParClient } from "./js/arbitrage.js";
-import { ASSUMPTIONS as CAPACITE } from "./js/emprunts/economics/model.js";
+import { arbitrer, bascule, ceQuiTrancherait, desaccordReel, ecartConversion } from "./js/arbitrage.js";
 
 /* Les mêmes bornes que le serveur : une saisie absurde produit un verdict qui a l'air de
  * sortir du modèle alors qu'il sort de la saisie. */
@@ -30,35 +29,31 @@ const BORNES = {
 
 let situation = structuredClone(CAS);
 
-function escalier(s) {
-  const c = clientsGagnes(s);
-  const heuresParAnalyste = CAPACITE.productiveHoursPerDay * CAPACITE.workingDaysPerYear;
-  const clientsParAnalyste = heuresParAnalyste / Math.max(heuresParClient(s), 1e-9);
-  const clientsGratuits = Math.max(0, s.heuresLibres) / Math.max(heuresParClient(s), 1e-9);
-  const haut = Math.max(c.haut, 1);
-  const marches = [];
-  let de = 0;
-  for (let n = 0; de < haut && n < 40; n++) {
-    const a = n === 0 ? clientsGratuits : clientsGratuits + n * clientsParAnalyste;
-    marches.push({ de, a: Math.min(a, haut * 1.15), valeur: n * CAPACITE.loadedCostPerAnalyst,
-      ici: c.centre >= de && c.centre < a, gratuite: n === 0 });
-    de = a;
+const RESOLUTION = { x: 46, y: 29 };
+function champ(s) {
+  const [px0, px1] = BORNES.partNonDetectee;
+  const [py0, py1] = BORNES.coutRisqueNonDetecte;
+  const out = [];
+  for (let j = 0; j < RESOLUTION.y; j++) {
+    const cout = py0 + ((j + 0.5) / RESOLUTION.y) * (py1 - py0);
+    for (let i = 0; i < RESOLUTION.x; i++) {
+      const part = px0 + ((i + 0.5) / RESOLUTION.x) * (px1 - px0);
+      out.push(arbitrer({ ...s, coutRisqueNonDetecte: cout }, part).net.centre >= 0);
+    }
   }
-  return { marches, clientsParAnalyste, clientsGratuits };
+  return out;
 }
 
 const etat = () => ({
   situation,
   bornes: BORNES,
-  inventaire: [],
   ecart: ecartConversion(situation),
   verdict: arbitrer(situation),
   bascule: bascule(situation),
   desaccord: desaccordReel(situation),
   leviers: ceQuiTrancherait(situation),
-  escalier: escalier(situation),
-  capacite: { coutAnalyste: CAPACITE.loadedCostPerAnalyst,
-    heuresParAnalyste: CAPACITE.productiveHoursPerDay * CAPACITE.workingDaysPerYear },
+  champ: champ(situation),
+  resolution: RESOLUTION,
 });
 
 window.LOCAL = async (chemin, corps) => {
