@@ -41,7 +41,22 @@ const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":
  * shim installé avant ce script répond aux mêmes routes avec les mêmes formes. Deux écrans
  * divergeraient au premier correctif ; celui-ci est le seul.
  */
+/*
+ * Attendre que le shim soit posé, quand il y en a un.
+ *
+ * Sur l'hôte statique, le shim est un module qui importe six fichiers ; l'écran n'en
+ * importe qu'un. Si un seul de ces six tarde ou échoue, l'écran part avant lui, `api()`
+ * tombe sur `fetch("/api/...")`, GitHub répond sa page 404 en HTML, et le lecteur reçoit
+ * « Unexpected token '<' » avec un écran vide. Vu une fois sur cinq chargements de la
+ * démo du banc, donc invisible pour qui vérifie une seule fois.
+ *
+ * Une balise classique posée avant les modules crée la promesse ; le shim la tient. En
+ * local, `window.LOCAL_PRET` n'existe pas et rien n'attend.
+ */
+const pret = async () => { if (!window.LOCAL && window.LOCAL_PRET) await window.LOCAL_PRET; };
+
 const api = async (chemin, corps) => {
+  await pret();
   if (window.LOCAL) return window.LOCAL(chemin, corps);
   const r = await fetch(chemin, corps
     ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(corps) }

@@ -15,7 +15,7 @@ import { isMain } from "./cli.ts";
 
 const root = new URL("..", import.meta.url).pathname;
 
-const SHIM = `<script type="module">
+const SHIM = `<script>window.LOCAL_PRET = new Promise((r) => { window.LOCAL_POSE = r; });</script>\n<script type="module">
 import { CAS } from "./js/situation.js";
 import { arbitrer, bascule, ceQuiTrancherait, desaccordReel, ecartConversion } from "./js/arbitrage.js";
 
@@ -71,6 +71,10 @@ window.LOCAL = async (chemin, corps) => {
   }
   return {};
 };
+
+/* Le shim est en place : l'écran peut partir. La balise classique qui a créé la promesse
+ * s'exécute avant tout module, donc personne ne peut la manquer. */
+window.LOCAL_POSE && window.LOCAL_POSE();
 ` + "</" + "script>\n";
 
 const BANNIERE = `<p class="renvoi" style="margin-bottom:1.5rem">
