@@ -1,0 +1,769 @@
+/*
+ * L'IDENTITÉ COMMUNE AUX OUTILS DU PORTFOLIO.
+ *
+ * Une seule affirmation, tenue partout : « voici ce que personne ne calcule, et voici le
+ * calcul ». Un écran qui annonce un résultat montre au-dessus les nombres dont il découle.
+ * Cette contrainte-là ne change pas.
+ *
+ * ─── Ce qui a changé, et pourquoi l'écrire ───
+ *
+ * La version précédente s'appelait « le registre » et imitait un relevé comptable : angles
+ * droits partout, zéro coin arrondi, zéro ombre, une chasse fixe sur tous les chiffres,
+ * toutes les cellules, tous les intitulés. C'était intellectuellement cohérent et c'était
+ * une erreur, pour trois raisons qu'il vaut mieux écrire que réapprendre :
+ *
+ *  1. **La chasse fixe ne disait plus rien.** Elle signifie « ceci est une donnée » ;
+ *     appliquée à tout — y compris au sélecteur de langue et à la signature — elle ne
+ *     distingue plus rien, et la page devient du bruit.
+ *  2. **Les boutons ne ressemblaient pas à des boutons.** Un filet de 1 px sur fond clair,
+ *     exactement comme chaque panneau et chaque encadré. Rien ne disait « clique ici ».
+ *  3. **Le serré était un bug, pas un parti pris.** La marge intérieure dépendait d'un
+ *     conteneur qu'il fallait penser à écrire, et vingt panneaux sur trente-cinq l'avaient
+ *     oublié. Le feuillet porte sa marge lui-même désormais.
+ *
+ * ─── Les règles, cette fois ───
+ *
+ *  1. **Une seule famille de caractères.** La hiérarchie vient du poids et de la taille.
+ *     Les chiffres reçoivent `tabular-nums` pour s'aligner — pas une fonte à part.
+ *  2. **Une seule couleur d'accent**, un vert profond, et elle ne marque qu'une chose : ce
+ *     qui porte la conclusion. Jamais un titre, jamais une décoration.
+ *  3. **Le rouge reste sémantique** : un total défavorable, et rien d'autre.
+ *  4. **Un bouton est plein ou franchement bordé**, jamais un simple cadre. Actif, il est
+ *     rempli. On doit savoir où cliquer sans essayer.
+ *  5. **Ce qui se compare se dessine.** Un classement porte une jauge : l'écart se voit
+ *     avant d'être lu, et sur ces outils l'écart *est* la trouvaille.
+ *
+ * Le fichier garde son nom — `registre.css` — parce que six écrans, six scripts de
+ * publication et les démos en ligne le référencent, et qu'un renommage a déjà cassé ce
+ * projet trois fois. Le nom est de l'histoire ; les règles sont ci-dessus.
+ *
+ * Recopié à l'identique dans chaque dépôt : aucun n'a de dépendance, et chacun doit
+ * tourner seul après un clone.
+ */
+
+:root {
+  /* Le papier et le sous-main. La page est une feuille posée, pas une application. */
+  --fond: #eeece6;
+  --papier: #fbfaf7;
+
+  --encre: #14161a;
+  --encre-pale: #5c574c;
+  --encre-tres-pale: #8b8578;
+  --filet: #e0dbcd;
+  --filet-gras: #c9c2b0;
+
+  /* Le vert profond, inchangé : il tient aussi bien sur le crème que sur le blanc. */
+  --accent: #14603f;
+  --accent-clair: #2f8a60;
+  --accent-fond: #edf2ec;
+  --accent-bord: #bcd4c3;
+  --accent-sombre: #0d4a30;
+
+  /* Le rouge et l'ambre se réchauffent : les tons froids de l'ancienne palette juraient
+   * sur le crème. Le gris de contexte des figures aussi — un gris bleuté sur papier crème
+   * se lit comme une tache, pas comme un fond. */
+  --defavorable: #9c3b2c;
+  --favorable: #14603f;
+  --attention: #9a6522;
+  --contexte: #d3cec0;
+  --surligne: #f4f1e8;
+
+  --ombre: none;
+  --ombre-bouton: none;
+  /* Zéro pour les blocs — un document n'a pas de cartes. Quatre pixels pour ce qui se
+   * clique, sinon un bouton cesse de ressembler à un bouton, ce qui a déjà été reproché. */
+  --arrondi: 0;
+  --arrondi-petit: 4px;
+
+  /* Trois familles, trois rôles, et pas un de plus. */
+  --romain: ui-serif, Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --police: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, ui-sans-serif, sans-serif;
+  --fixe: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--encre);
+  font: 16px/1.62 var(--romain);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * La feuille.
+ *
+ * L'écran n'est plus une suite de cartes flottant sur du gris : c'est un document. Le
+ * fond sableux est le sous-main, la feuille crème porte tout, et les sections se séparent
+ * par des filets — comme un relevé, pas comme un tableau de bord.
+ */
+main {
+  max-width: 1000px; margin: 0 auto; background: var(--papier);
+  padding: 48px 52px 72px;
+  box-shadow: 0 1px 2px rgba(20,22,26,.05), 0 18px 44px rgba(20,22,26,.07);
+}
+@media (max-width: 760px) { main { padding: 30px 20px 48px; } }
+
+/* ─────────────────────────── en-tête ─────────────────────────── */
+
+.haut {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 20px; flex-wrap: wrap; margin-bottom: 30px;
+  border-bottom: 2.5px solid var(--encre); padding-bottom: 14px;
+}
+h1 { font: 400 34px/1.1 var(--romain); margin: 0 0 8px; letter-spacing: -.022em; }
+.lede { color: var(--encre-pale); font-size: 16.5px; margin: 0; max-width: 62ch; line-height: 1.58; }
+.lede b { color: var(--encre); font-weight: 600; }
+
+.lang { display: flex; gap: 4px; flex: 0 0 auto; }
+.lang button {
+  font: 600 12px/1 var(--police); letter-spacing: .06em;
+  border: 1px solid var(--filet-gras); background: var(--papier); color: var(--encre-pale);
+  border-radius: var(--arrondi-petit); padding: 0 13px; min-height: 36px; cursor: pointer;
+  transition: .12s;
+}
+.lang button:hover { border-color: var(--encre-tres-pale); color: var(--encre); }
+.lang button.on { background: var(--encre); border-color: var(--encre); color: var(--papier); }
+.lang button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+h2 {
+  font: 600 10.5px/1.7 var(--fixe); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--encre-tres-pale); margin: 44px 0 0;
+}
+
+/* ─────────────────────────── le feuillet ─────────────────────────── */
+
+/*
+ * Le feuillet n'est plus une carte : c'est un bloc du document.
+ *
+ * Une carte blanche arrondie posée sur du gris, répétée trente fois, ne hiérarchise rien —
+ * c'est le motif qu'on produit faute d'avoir décidé. Ici le bloc se signale par un filet
+ * et par l'espace, comme une rubrique de relevé.
+ */
+.feuillet {
+  background: none;
+  border-top: 1px solid var(--filet);
+  margin-top: 14px;
+  padding: 20px 0 6px;
+}
+.feuillet + .feuillet { margin-top: 0; }
+/* Le relevé d'ouverture, lui, est un encadré : c'est la seule chose qu'on lit d'abord. */
+.chiffres > .feuillet, .feuillet.encadre {
+  background: var(--surligne); border: 1px solid var(--filet);
+  border-top: 1px solid var(--filet); padding: 22px 24px 20px; margin-top: 16px;
+}
+.feuillet > .corps { padding: 0; }
+
+.feuillet > .titre, .titre {
+  font: 600 18px/1.3 var(--romain); letter-spacing: -.012em;
+  color: var(--encre); margin: 0 0 10px; text-transform: none;
+}
+.feuillet > .intitule {
+  font: 600 10.5px/1.7 var(--fixe); letter-spacing: .13em; text-transform: uppercase;
+  color: var(--encre-tres-pale); margin: 0 0 14px; padding: 0;
+}
+
+/*
+ * L'explication recule.
+ *
+ * Elle a été écrite quand ces écrans n'avaient que des tableaux : il fallait dire en prose
+ * ce qu'aucune figure ne montrait. Maintenant que les figures portent la démonstration,
+ * deux ou trois lignes de justification avant chacune ne sont plus une aide, ce sont des
+ * lignes à franchir. Elles passent donc en second plan — plus petites, plus étroites — et
+ * leur contenu a été ramené à la seule affirmation. Le raisonnement complet vit dans le
+ * README, qui est fait pour ça.
+ */
+.quoi { color: var(--encre-pale); font-size: 14.5px; line-height: 1.55; margin: 0 0 14px; max-width: 62ch; }
+.quoi:last-child { margin-bottom: 0; }
+.quoi b { color: var(--encre); font-weight: 600; }
+
+/* ─────────────────────────── les lignes ─────────────────────────── */
+
+.ligne {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 18px;
+  padding: 11px 0; border-bottom: 1px solid var(--filet);
+}
+.ligne + .ligne { margin-top: 0; }
+.ligne .intitule { color: var(--encre); font-size: 15.5px; font-weight: 400; min-width: 0; }
+.ligne .intitule small { display: block; color: var(--encre-pale); font-size: 12.5px; font-weight: 400; margin-top: 2px; }
+/*
+ * La lecture est linéale, mais pas grosse.
+ *
+ * Un chiffre n'est pas une phrase, et le contraste avec le romain de la prose sépare d'un
+ * coup d'œil ce qui est mesuré de ce qui est raconté. En revanche mettre *toutes* les
+ * lectures à vingt-quatre points supprimait la hiérarchie : cinq chiffres de routine
+ * criaient aussi fort que la conclusion, et la page n'avait plus de point d'entrée. Le
+ * relevé n'a qu'un solde ; ici, un seul chiffre par panneau a le droit d'être grand.
+ */
+.ligne .valeur {
+  font: 600 17px/1.3 var(--police); font-variant-numeric: tabular-nums;
+  white-space: nowrap; letter-spacing: -.015em;
+}
+.ligne .valeur small { color: var(--encre-tres-pale); font-size: 12px; font-weight: 400; }
+
+/* La conclusion : la seule ligne en accent, et jamais plus d'une par panneau. */
+.ligne.total {
+  background: none; border-top: 2px solid var(--encre); border-bottom: 2.5px solid var(--encre);
+  margin-top: 10px; padding: 14px 0;
+}
+.ligne.total .intitule { font-weight: 600; }
+/* Le solde : le seul de son panneau, et c'est ce qui le rend lisible. */
+.ligne.total .valeur { font: 300 30px/1 var(--police); letter-spacing: -.03em; color: var(--accent-sombre); }
+.ligne.total.defavorable { background: none; }
+.ligne.total.defavorable .valeur { color: var(--defavorable); }
+.ligne.total.attente .valeur { color: var(--encre-tres-pale); }
+
+.ligne.ici { background: var(--surligne); box-shadow: 0 0 0 8px var(--surligne); }
+.valeur.defavorable { color: var(--defavorable); }
+.valeur.favorable, .gratuit { color: var(--favorable); font-weight: 600; }
+.neutre, .discret { color: var(--encre-tres-pale); }
+
+/* ─────────────────────────── le rang, avec sa jauge ─────────────────────────── */
+
+/*
+ * Ce qui se compare se dessine.
+ *
+ * Un classement rendu en colonnes demande de lire quatre nombres et de faire la
+ * soustraction soi-même. Une jauge montre l'écart avant qu'on l'ait lu.
+ */
+/*
+ * `.rang` était déjà pris.
+ *
+ * Quatre écrans s'en servaient pour une ligne de contrôles — un curseur entre deux
+ * libellés — bien avant que la refonte n'en fasse un élément de classement. Redéfinir le
+ * nom a écrasé leur mise en page d'un coup, sans qu'aucun test ne le voie : une feuille de
+ * style n'a pas de vérificateur de types.
+ *
+ * L'élément de classement prend donc un nom neuf, et `.rang` garde le sien. Renommer les
+ * douze appels aurait été le piège que ce projet a déjà payé trois fois.
+ */
+.rang {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin: 4px 0 2px;
+}
+/* Dans une ligne de contrôles, le champ prend la place qui reste : un chemin de dossier
+ * tronqué à mi-mot ne se vérifie pas du regard. */
+.rang > input[type="text"], .rang > input[type="number"], .rang > select { flex: 1 1 220px; width: auto; }
+.rang > .b { flex: 0 0 auto; }
+
+.place { display: flex; align-items: center; gap: 15px; padding: 13px 14px; border-radius: var(--arrondi-petit); }
+.place + .place { margin-top: 4px; }
+.place.ici, .place.gagnant {
+  background: var(--accent-fond); box-shadow: inset 0 0 0 1px var(--accent-bord);
+}
+.place .n {
+  width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+  font: 700 13px/1 var(--police); background: #eaecf0; color: var(--encre-pale); flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+.place.ici .n, .place.gagnant .n { background: var(--accent); color: #fff; }
+.place .nom { flex: 1; font-weight: 600; font-size: 15px; min-width: 0; }
+.place .nom small { display: block; font-weight: 400; color: var(--encre-pale); font-size: 12.5px; margin-top: 1px; }
+.place .valeur { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.place.ici .valeur, .place.gagnant .valeur { color: var(--accent-sombre); }
+
+.jauge { margin-bottom: 18px; }
+.jauge:last-child { margin-bottom: 0; }
+.jauge .etiquette { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 7px; }
+.jauge .etiquette b { font-size: 14.5px; font-weight: 600; }
+.jauge .etiquette small { color: var(--encre-pale); font-size: 12.5px; font-weight: 400; }
+.jauge .etiquette .valeur { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.jauge .piste { height: 12px; background: #eef0f2; border-radius: 99px; overflow: hidden; }
+.jauge .remplissage { height: 100%; border-radius: 99px; background: #c8cdd3; transition: width .25s ease; }
+.jauge.gagnant .remplissage { background: linear-gradient(90deg, var(--accent), var(--accent-clair)); }
+.jauge.gagnant .etiquette .valeur { color: var(--accent-sombre); }
+.jauge.defavorable .remplissage { background: var(--defavorable); }
+
+/* ─────────────────────────── les renvois ─────────────────────────── */
+
+.renvoi {
+  margin-top: 14px; padding: 13px 16px; border-radius: var(--arrondi-petit);
+  background: var(--surligne); border-left: 3px solid var(--filet-gras);
+  color: var(--encre-pale); font-size: 13.5px; line-height: 1.6;
+}
+.renvoi b { color: var(--encre); font-weight: 600; }
+.renvoi.defavorable { background: #fef3f2; border-left-color: var(--defavorable); color: #7a271a; }
+.renvoi.attention { background: #fffaeb; border-left-color: var(--attention); color: #7a2e0e; }
+.renvoi.favorable { background: var(--accent-fond); border-left-color: var(--accent); color: var(--accent-sombre); }
+
+/* La suite : ce qu'une section vient de montrer, et pourquoi la prochaine existe. */
+.suite {
+  margin: 20px 0 4px; padding: 15px 18px; border-radius: var(--arrondi-petit);
+  background: #f8f9fa; border-left: 3px solid var(--encre);
+  color: var(--encre-pale); font-size: 14px; line-height: 1.65;
+}
+.suite b { color: var(--encre); font-weight: 600; }
+.suite em { font-style: normal; color: var(--encre-tres-pale); }
+
+/* ─────────────────────────── tableaux ─────────────────────────── */
+
+.defile { overflow-x: auto; margin: 4px -4px 0; padding: 0 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+  text-align: right; font: 600 11.5px/1.3 var(--police); letter-spacing: .05em;
+  text-transform: uppercase; color: var(--encre-tres-pale);
+  padding: 0 12px 10px 0; white-space: nowrap; border-bottom: 1px solid var(--filet);
+}
+th:first-child, td:first-child { text-align: left; padding-left: 0; }
+th:last-child, td:last-child { padding-right: 0; }
+td {
+  text-align: right; padding: 12px 12px 12px 0; border-bottom: 1px solid var(--filet);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+td:first-child { font-weight: 500; white-space: normal; }
+tr:last-child td { border-bottom: 0; }
+tr.ici td { background: var(--accent-fond); }
+tr.ici td:first-child { border-radius: var(--arrondi-petit) 0 0 var(--arrondi-petit); padding-left: 12px; }
+tr.ici td:last-child { border-radius: 0 var(--arrondi-petit) var(--arrondi-petit) 0; padding-right: 12px; }
+tr.deborde td { color: var(--defavorable); }
+code { font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace; background: var(--surligne); padding: 1px 5px; border-radius: 5px; }
+
+/* ─────────────────────────── boutons ─────────────────────────── */
+
+/*
+ * Un bouton est plein ou franchement bordé, jamais un simple cadre.
+ *
+ * La version précédente les dessinait avec le même filet de 1 px que les panneaux, et
+ * personne ne pouvait deviner qu'ils étaient cliquables. C'est le reproche le plus juste
+ * qu'on ait fait à cette interface.
+ */
+.b {
+  font: 600 13.5px/1 var(--police); cursor: pointer;
+  background: var(--encre); color: var(--papier); border: 1px solid var(--encre);
+  border-radius: var(--arrondi-petit); padding: 0 18px; min-height: 42px;
+  box-shadow: var(--ombre-bouton); transition: .12s;
+}
+.b:hover { background: #000; }
+.b:active { transform: translateY(1px); }
+.b[disabled] { background: #eef0f2; border-color: #eef0f2; color: var(--encre-tres-pale); cursor: not-allowed; box-shadow: none; }
+.b:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/*
+ * Trois niveaux, et le poids visuel suit l'importance.
+ *
+ * Avant, tout était noir plein : un « réinitialiser » avait exactement le même poids que
+ * l'action pour laquelle le panneau existe. Un écran qui crie partout ne dit rien, et
+ * l'œil ne sait pas où aller.
+ *
+ *   .b            l'action pour laquelle ce panneau existe. Une par panneau, jamais deux.
+ *   .b.secondaire utile, pas le sujet. Bordé, fond blanc.
+ *   .b.remise     défaire, revenir en arrière. Discret par construction : personne ne doit
+ *                 le trouver avant d'en avoir besoin, et personne ne doit le chercher.
+ */
+.b.discret, .b.secondaire {
+  background: var(--papier); color: var(--encre); border-color: var(--filet-gras);
+}
+.b.discret:hover, .b.secondaire:hover { background: var(--surligne); border-color: var(--encre-tres-pale); }
+
+.b.remise {
+  background: none; border-color: transparent; color: var(--encre-tres-pale);
+  box-shadow: none; padding: 0 12px; font-weight: 500;
+}
+.b.remise:hover { background: var(--surligne); color: var(--encre-pale); }
+
+/*
+ * Une jauge avec son seuil marqué.
+ *
+ * Deux nombres — « 0,810 » et « barre à 0,840 » — demandent au lecteur de faire la
+ * soustraction et de se rappeler dans quel sens elle va. Un trait sur une piste répond
+ * avant qu'on ait lu : le remplissage est en deçà ou au-delà du repère.
+ */
+.jauge .seuil {
+  position: absolute; top: -3px; bottom: -3px; width: 2px;
+  background: var(--encre); border-radius: 2px;
+}
+.jauge .piste { position: relative; overflow: visible; }
+.jauge .piste > .remplissage { overflow: hidden; }
+.jauge.sous .remplissage { background: var(--defavorable); }
+.jauge .marque {
+  position: absolute; top: 16px; transform: translateX(-50%);
+  font: 600 10.5px/1 var(--police); color: var(--encre-pale); white-space: nowrap;
+}
+.b.suite { background: var(--accent); border-color: var(--accent); color: #fff; margin: 0; padding: 0 18px; }
+.b.suite:hover { background: var(--accent-sombre); }
+
+/* Les scénarios : une situation nommée, en un clic. */
+/*
+ * Deux colonnes, jamais trois.
+ *
+ * Une grille `auto-fit` rangeait quatre boutons en 3 + 1 : un orphelin sur la deuxième
+ * ligne, et des largeurs inégales. C'est ce que « pas symétrique » désignait.
+ */
+.scenarios { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 4px 0 18px; }
+@media (max-width: 560px) { .scenarios { grid-template-columns: 1fr; } }
+.scenario {
+  font: 600 13.5px/1.35 var(--police); text-align: left; cursor: pointer;
+  background: var(--papier); color: var(--encre);
+  border: 1px solid var(--filet-gras); border-radius: var(--arrondi-petit);
+  padding: 13px 15px; box-shadow: var(--ombre-bouton); transition: .12s;
+}
+.scenario:hover { border-color: var(--encre-tres-pale); box-shadow: 0 2px 6px rgba(16, 24, 40, .09); }
+.scenario small { display: block; font-weight: 400; color: var(--encre-pale); font-size: 12px; margin-top: 4px; }
+.scenario.on { background: var(--encre); border-color: var(--encre); color: var(--papier); }
+.scenario.on small { color: #c9cdd3; }
+.scenario:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Les puces de rappel : des raccourcis vers un travail déjà fait, pas des actions. */
+.puces { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 7px; }
+.puce {
+  font: 400 12.5px/1.3 var(--police); cursor: pointer;
+  color: var(--encre-pale); background: var(--surligne); border: 1px solid transparent;
+  border-radius: 99px; padding: 7px 13px; transition: .12s;
+}
+.puce:hover { color: var(--encre); border-color: var(--filet-gras); background: var(--papier); }
+.puce:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ─────────────────────────── formulaires ─────────────────────────── */
+
+.grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(212px, 1fr)); gap: 16px; margin: 4px 0 18px; }
+label { display: block; font-size: 12.5px; color: var(--encre-pale); margin-bottom: 6px; }
+input[type="number"], input[type="text"], select, textarea {
+  font: 500 14.5px/1 var(--police); width: 100%;
+  background: var(--papier); color: var(--encre);
+  border: 1px solid var(--filet-gras); border-radius: var(--arrondi-petit);
+  padding: 0 14px; min-height: 44px;
+  font-variant-numeric: tabular-nums;
+}
+textarea { padding: 12px 14px; min-height: 76px; line-height: 1.5; font-weight: 400; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+
+
+input[type="range"] { flex: 1; min-width: 180px; accent-color: var(--accent); height: 24px; }
+.bout { color: var(--encre-tres-pale); font-size: 12px; flex: 0 0 auto; }
+.lecture { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+
+/* ─────────────────────────── avant / après ─────────────────────────── */
+
+.avant-apres { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+.avant-apres > div {
+  flex: 1 1 240px; padding: 14px 16px; border-radius: var(--arrondi-petit);
+  background: var(--surligne);
+}
+.avant-apres .quand {
+  color: var(--encre-tres-pale); font-size: 11.5px; text-transform: uppercase;
+  letter-spacing: .07em; font-weight: 700;
+}
+.avant-apres .ordre { font-size: 14.5px; font-weight: 600; margin-top: 6px; }
+.avant-apres .change { background: var(--accent-fond); box-shadow: inset 0 0 0 1px var(--accent-bord); }
+.avant-apres .change .ordre { color: var(--accent-sombre); }
+
+/* ─────────────────────────── divers ─────────────────────────── */
+
+.chiffres { margin-top: 16px; }
+.meta, .reference { color: var(--encre-tres-pale); font-size: 12px; }
+.vide { color: var(--encre-tres-pale); font-size: 13.5px; padding: 22px 0; text-align: center; }
+.entete { font-weight: 600; }
+.signature, .attribution { color: var(--encre-pale); font-size: 13px; margin-top: 26px; }
+.attribution b { color: var(--encre); font-weight: 600; }
+
+details { margin-top: 18px; }
+details > summary {
+  cursor: pointer; color: var(--encre-pale); font: 600 13px/1 var(--police);
+  list-style: none; display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surligne); border: 1px solid var(--filet-gras);
+  border-radius: var(--arrondi-petit); padding: 10px 14px; min-height: 40px;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: "+"; font-size: 15px; color: var(--encre-tres-pale); }
+details[open] > summary::before { content: "−"; }
+details > summary:hover { border-color: var(--encre-tres-pale); color: var(--encre); }
+details > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details[open] > summary { margin-bottom: 14px; color: var(--encre); }
+
+a { color: var(--accent-sombre); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--encre); }
+
+@media (max-width: 640px) {
+  main { padding: 26px 16px 90px; }
+  h1 { font-size: 23px; }
+  .feuillet { padding: 18px 16px 20px; }
+  .ligne, .place { padding: 12px 10px; }
+  .scenarios { grid-template-columns: 1fr; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * LES GRAPHIQUES.
+ *
+ * Règle 5 poussée jusqu'au bout : ce qui se compare se dessine. Trois affirmations
+ * de ces outils portent sur des *formes* — un coût marginal qui reste nul puis
+ * explose, une attente qui diverge quand la charge approche de 1, des cohortes dont
+ * aucune ne tombe sur la moyenne. Un tableau les contient ; une courbe les montre.
+ *
+ * La couleur d'accent garde son sens : elle porte la série qui décide. Une seconde
+ * série est du contexte, et elle est grise. Le rouge reste réservé au défavorable —
+ * ici, les réglages disqualifiés (file qui déborde, délai réglementaire manqué).
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+.graphe { margin: 16px 0 4px; }
+.graphe + .defile, .graphe + table { margin-top: 18px; }
+
+.cadre-graphe { position: relative; }
+.cadre-graphe svg { display: block; width: 100%; min-width: 620px; height: auto; }
+
+.graphe text { font-family: var(--police); }
+.graphe .grad { font-size: 12px; fill: var(--encre-tres-pale); font-variant-numeric: tabular-nums; }
+.graphe .grad.droite { text-anchor: start; }
+/* Deux axes, deux couleurs : la graduation dit à quelle courbe elle appartient. */
+.graphe .grad.t-accent { fill: var(--accent-clair); font-weight: 600; }
+.graphe .grad.t-neutre { fill: var(--encre-pale); font-weight: 600; }
+.graphe .grad.t-alerte { fill: var(--defavorable); font-weight: 600; }
+.graphe .grad.t-attention { fill: var(--attention); font-weight: 600; }
+.graphe .grille { stroke: var(--filet); stroke-width: 1; }
+.graphe .sol { stroke: var(--filet-gras); stroke-width: 1; }
+
+.graphe .trace { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.graphe .trace.secondaire { stroke: var(--encre-tres-pale); stroke-width: 2; stroke-dasharray: 5 4; }
+.graphe .trace.t-alerte { stroke: var(--defavorable); }
+.graphe .trace.t-attention { stroke: var(--attention); }
+.graphe .trace.t-neutre { stroke: var(--encre-pale); }
+
+.graphe .aire { fill: var(--accent-fond); stroke: none; }
+.graphe .aire.t-alerte { fill: #fdf0ef; }
+.graphe .aire.t-attention { fill: #fdf3ea; }
+.graphe .aire.t-neutre { fill: var(--surligne); }
+
+.graphe .point { fill: var(--accent); }
+.graphe .point.t-alerte { fill: var(--defavorable); }
+.graphe .point.t-attention { fill: var(--attention); }
+.graphe .point.t-neutre { fill: var(--encre-tres-pale); }
+.graphe .point-actif { fill: var(--papier); stroke: var(--encre); stroke-width: 2.5; }
+
+/* L'histogramme coupé par un seuil. La part hachurée doit rester lisible en gris :
+   c'est la trame qui porte l'information, la couleur ne fait que la doubler. */
+.graphe .zone-seuil { fill: var(--surligne); }
+.graphe .bande-hist { fill: var(--accent-bord); cursor: crosshair; }
+.graphe .bande-part { stroke: var(--defavorable); stroke-width: .8; pointer-events: none; }
+.graphe .bande-part, .graphe .cle-hist.part { fill-opacity: 1; }
+.graphe .repere-seuil { stroke: var(--encre); stroke-width: 1.8; }
+.graphe .etiq-seuil { font: 700 12px/1 var(--police); fill: var(--encre); }
+.graphe .dit-avant { font: 600 11.5px/1 var(--police); fill: var(--defavorable); }
+.graphe .dit-apres { font: 600 11.5px/1 var(--police); fill: var(--accent); }
+.graphe .cle-hist { fill: var(--accent-bord); }
+.graphe .cle-hist.part { stroke: var(--defavorable); stroke-width: .8; }
+.graphe pattern.alerte line { stroke: var(--defavorable); stroke-width: 1.3; }
+
+/* La grille des cas. Plein contre vide porte le sens ; le contour rouge et le mot écrit
+   ne font que le confirmer. Une impression en noir et blanc dit la même chose. */
+.graphe .case-ok { fill: var(--accent-bord); }
+.graphe .case-repare { fill: var(--accent); }
+.graphe .case-ko { fill: var(--papier); stroke: var(--filet); stroke-width: 1; }
+.graphe .case-casse { fill: var(--papier); stroke: var(--defavorable); stroke-width: 1.8; }
+.graphe .case-instable { fill: var(--surligne); stroke: var(--attention); stroke-width: 1.6; stroke-dasharray: 3 2.5; }
+.graphe .case-vide { fill: none; }
+.graphe .case-ok, .graphe .case-ko, .graphe .case-casse, .graphe .case-repare,
+.graphe .case-instable { cursor: crosshair; }
+.graphe .grille-nom { font: 500 12.5px/1 var(--police); fill: var(--encre-pale); }
+.graphe .grille-bout { font: 600 12.5px/1 var(--police); fill: var(--encre); font-variant-numeric: tabular-nums; }
+.graphe .grille-num { font-size: 10.5px; fill: var(--encre-tres-pale); font-variant-numeric: tabular-nums; }
+
+/* Les deux populations. Un carré = un cas : au-dessus de l'axe ce qui a une réponse,
+   en dessous ce qui n'en a pas. La position au-dessus ou en dessous porte le sens ; la
+   teinte ne fait que l'appuyer. */
+.graphe .pop { fill: var(--accent); }
+.graphe .pop.bas { fill: var(--encre-tres-pale); }
+.graphe .pop-nom { font: 600 11.5px/1 var(--police); fill: var(--accent); }
+.graphe .pop-nom.bas { fill: var(--encre-pale); }
+
+/* Les deux sens. Le zéro au milieu : le sens porte le signe avant que le chiffre soit lu,
+   et une sortie de caisse ne peut plus ressembler à une recette. */
+.graphe .opp-barre { fill: var(--accent-bord); cursor: crosshair; }
+.graphe .opp-barre.sortie { fill: var(--defavorable); fill-opacity: .34; }
+.graphe .opp-barre.ici { fill: var(--accent); }
+/* Une barre mise en avant reste une sortie de caisse si elle est négative : sans cette
+   ligne, un net défavorable se dessinait en vert pendant que son signe disait l'inverse. */
+.graphe .opp-barre.ici.sortie { fill: var(--defavorable); fill-opacity: 1; }
+.graphe .opp-zero { stroke: var(--encre); stroke-width: 1.4; }
+.graphe .opp-inter { stroke: var(--encre-pale); stroke-width: 1.4; }
+.graphe .opp-borne { stroke: var(--encre-pale); stroke-width: 1.4; }
+.graphe .opp-nom { font: 500 13px/1 var(--police); fill: var(--encre-pale); }
+.graphe .opp-nom.ici { font-weight: 700; fill: var(--encre); }
+.graphe .opp-val { font: 600 13.5px/1 var(--police); fill: var(--encre); font-variant-numeric: tabular-nums; }
+
+/* L'axe des croyances. Une bande, pas des points : rien n'a été compté ici. */
+.graphe .axe-bande { fill: var(--accent-bord); cursor: help; }
+.graphe .axe-bande.bas { fill: var(--contexte); }
+.graphe .axe-nom { font: 600 11.5px/1 var(--police); fill: var(--accent); }
+.graphe .axe-nom.bas { fill: var(--encre-pale); }
+/* Posé sur la bande, l'intitulé doit rester lisible sur son propre fond. */
+.graphe .axe-nom.dans { fill: var(--encre); }
+.graphe .axe-nom.dans.bas { fill: var(--encre-pale); }
+
+/* Les rangs. L'accent ne porte jamais seul : trait épais, point plein, intitulé gras —
+   un lecteur qui ne distingue pas les deux verts lit quand même laquelle est suivie. */
+.graphe .rang-colonne { stroke: var(--filet); stroke-width: 1; }
+.graphe .rang-trace { stroke: var(--encre-tres-pale); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.graphe .rang-trace.vedette { stroke: var(--accent); stroke-width: 3.5; }
+.graphe .rang-point { fill: var(--papier); stroke: var(--encre-tres-pale); stroke-width: 2; cursor: crosshair; }
+.graphe .rang-point.vedette { fill: var(--accent); stroke: none; }
+.graphe .rang-nom { font: 500 12.5px/1 var(--police); fill: var(--encre-pale); }
+.graphe .rang-nom.vedette { font-weight: 700; fill: var(--accent); }
+
+/* Le « vous êtes ici » : c'est le seul trait plein encre de la figure, parce que c'est
+ * la seule information qui ne vient pas du modèle mais du lecteur. */
+.graphe .repere { stroke: var(--encre); stroke-width: 1.5; }
+.graphe .etiq-repere { font-size: 12px; font-weight: 700; fill: var(--encre); }
+
+/* Un voile, pas un aplat : la courbe doit rester lisible sous la zone disqualifiée.
+ * La teinte vient en troisième — après les hachures et le libellé écrit, qui portent le
+ * sens à eux seuls sur une impression en noir et blanc comme pour un lecteur daltonien. */
+.graphe pattern line { stroke: var(--encre-tres-pale); stroke-width: 1.4; }
+.graphe .bande { fill: var(--defavorable); fill-opacity: .10; }
+.graphe .bande.t-attention { fill: var(--attention); fill-opacity: .10; }
+.graphe .bande.t-neutre { fill: var(--encre); fill-opacity: .05; }
+.graphe .etiq-bande { font-size: 11.5px; font-weight: 600; fill: var(--defavorable); letter-spacing: .02em; }
+/* Un liseré de la couleur du papier derrière les étiquettes posées sur le dessin.
+ * Sans lui, l'intitulé d'une bande tombe sur la courbe qu'il est censé qualifier. */
+.graphe .etiq-bande, .graphe .etiq-repere, .graphe .etiq-seuil {
+  paint-order: stroke; stroke: var(--papier); stroke-width: 3.5px; stroke-linejoin: round;
+}
+
+
+.graphe .seuil-ligne { stroke: var(--encre-tres-pale); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.graphe .etiq-seuil { font-size: 11.5px; font-weight: 600; fill: var(--encre-pale); }
+
+.graphe .marche { fill: var(--accent-fond); stroke: none; }
+.graphe .marche.ici { fill: var(--accent-bord); }
+.graphe .marche.gratuite { fill: var(--accent-fond); }
+.graphe .marche.morte { fill: var(--surligne); }
+.graphe .dessus { stroke: var(--accent); stroke-width: 2.5; }
+.graphe .dessus.morte { stroke: var(--filet-gras); }
+
+.graphe .cible, .graphe .marche { cursor: crosshair; }
+.graphe .cible { fill: transparent; }
+.graphe .cible:hover { fill: rgba(20, 96, 63, .05); }
+
+.lecture-flottante {
+  position: absolute; top: 8px; pointer-events: none; z-index: 4;
+  background: var(--papier); border: 1px solid var(--filet-gras); border-radius: var(--arrondi-petit);
+  box-shadow: var(--ombre); padding: 8px 11px; font-size: 12.5px; line-height: 1.5;
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.lecture-flottante u { text-decoration: none; display: block; color: var(--encre-tres-pale);
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+.lecture-flottante b { font-weight: 600; }
+
+.legende { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; padding-left: 4px; }
+.legende .cle { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--encre-pale); }
+.legende .cle::before {
+  content: ""; width: 14px; height: 3px; border-radius: 2px; background: var(--accent); flex: 0 0 auto;
+}
+.legende .cle:nth-child(2)::before { background: var(--encre-tres-pale); }
+.legende .cle.t-alerte::before { background: var(--defavorable); }
+.legende .cle.t-attention::before { background: var(--attention); }
+.legende .cle.t-neutre::before { background: var(--filet-gras); }
+
+/* Les barres : de l'HTML, pas du SVG. Les intitulés sont des phrases, ils doivent pouvoir
+ * revenir à la ligne et se sélectionner. */
+.graphe.barres { display: grid; gap: 9px; position: relative; }
+.barre-ligne[data-lecture] { cursor: help; }
+.barre-ligne { display: grid; grid-template-columns: minmax(90px, 1.15fr) 3fr minmax(66px, auto); gap: 14px; align-items: center; }
+.barre-nom { font-size: 13.5px; color: var(--encre-pale); line-height: 1.35; }
+.barre-ligne.ici .barre-nom { color: var(--encre); font-weight: 600; }
+.barre-piste { position: relative; height: 20px; background: #eef0f2; border-radius: 5px; }
+.barre-plein { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: var(--filet-gras); transition: width .25s ease; }
+.barre-plein.t-accent { background: linear-gradient(90deg, var(--accent), var(--accent-clair)); }
+.barre-plein.t-alerte { background: var(--defavorable); }
+.barre-plein.t-attention { background: var(--attention); }
+.barre-ligne.ici .barre-plein { box-shadow: 0 0 0 2px var(--papier), 0 0 0 3.5px var(--encre); }
+.barre-val { font-size: 14.5px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.barre-note { display: block; font-size: 11.5px; font-weight: 400; color: var(--encre-tres-pale); }
+
+/* L'intervalle. Sur ces outils l'incertitude est le résultat aussi souvent que la valeur :
+ * deux étapes dont les fourchettes se recouvrent ne se classent pas, et ça doit se voir. */
+.fourchette {
+  position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
+  border-left: 2px solid var(--encre); border-right: 2px solid var(--encre);
+  background: linear-gradient(var(--encre), var(--encre)) center/100% 2px no-repeat;
+  opacity: .55;
+}
+.barre-repere { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--encre); border-radius: 2px; }
+
+.barre-piste.empilee { display: flex; overflow: hidden; }
+.seg { height: 100%; display: grid; place-items: center; font-size: 11.5px; font-weight: 600;
+  color: var(--papier); font-variant-numeric: tabular-nums; background: var(--filet-gras); }
+.seg.t-accent { background: var(--accent); }
+.seg.t-alerte { background: var(--defavorable); }
+.seg.t-attention { background: var(--attention); }
+.seg.t-neutre { background: #cdd2d7; color: var(--encre); }
+
+@media (max-width: 620px) {
+  .barre-ligne { grid-template-columns: 1fr auto; gap: 4px 12px; }
+  .barre-nom { grid-column: 1; }
+  .barre-val { grid-column: 2; }
+  .barre-piste { grid-column: 1 / -1; }
+}
+
+/* L'intitulé d'une figure. Il dit ce qu'on regarde ; l'`aria-label` dit ce qu'on y voit. */
+.titre-fig {
+  font: 600 12.5px/1.4 var(--police); letter-spacing: .05em; text-transform: uppercase;
+  color: var(--encre-tres-pale); margin: 26px 0 0;
+}
+.quoi + .titre-fig, .titre + .titre-fig { margin-top: 18px; }
+.titre-fig:first-child { margin-top: 0; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * L'APPARITION.
+ *
+ * Ces écrans redessinent le bloc entier à chaque changement d'état : l'élément qui
+ * portait la valeur précédente n'existe plus, donc une `transition` CSS n'a rien à
+ * interpoler et ne se déclenche jamais. L'animation se joue donc à l'apparition —
+ * la barre pousse depuis la gauche, la courbe se trace. C'est ce qui donne à un
+ * réglage l'impression d'agir sur quelque chose plutôt que de recharger un tableau.
+ *
+ * Courte, et coupée net pour qui a demandé moins d'animations : une figure n'est
+ * jamais lue pendant son animation, seulement après.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+@keyframes pousse { from { transform: scaleX(0); } }
+@keyframes trace { from { stroke-dashoffset: 1; } }
+@keyframes parait { from { opacity: 0; } }
+
+.barre-plein, .barre-piste.empilee > .seg {
+  transform-origin: left center;
+  animation: pousse .42s cubic-bezier(.22, .61, .36, 1) both;
+}
+.graphe .trace {
+  stroke-dasharray: 1; stroke-dashoffset: 0;
+  animation: trace .55s cubic-bezier(.4, 0, .2, 1) both;
+}
+.graphe .aire, .graphe .point, .graphe .point-actif, .graphe .marche, .graphe .dessus,
+.graphe .bande, .graphe .etiq-bande, .graphe .repere, .graphe .etiq-repere, .fourchette {
+  animation: parait .5s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barre-plein, .graphe .trace, .graphe .aire, .graphe .point, .graphe .point-actif,
+  .graphe .marche, .graphe .dessus, .graphe .bande, .graphe .etiq-bande, .graphe .repere,
+  .graphe .etiq-repere, .fourchette, .barre-piste.empilee > .seg { animation: none; }
+}
+
+/*
+ * La bascule.
+ *
+ * Une case à cocher et son libellé dans un `div` en flux normal s'empilent : la case seule
+ * sur sa ligne, le texte en dessous, et plus rien ne dit qu'ils vont ensemble. Le défaut
+ * n'existait pas avant la refonte — l'ancienne feuille donnait au conteneur un affichage
+ * en ligne par un autre chemin, et le retirer l'a découvert.
+ */
+.bascule {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--filet);
+}
+.bascule input[type="checkbox"] {
+  width: 17px; height: 17px; margin: 2px 0 0; accent-color: var(--accent); flex: 0 0 auto; cursor: pointer;
+}
+.bascule label { font-size: 14.5px; color: var(--encre-pale); cursor: pointer; max-width: 68ch; }
+.bascule input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* La carte des chemins : une épine, des écarts, deux boucles. */
+.graphe .arc-epine { stroke: var(--accent); color: var(--accent); }
+.graphe .arc-ecart { stroke: var(--filet-gras); color: var(--filet-gras); }
+.graphe .arc-retour { stroke: var(--defavorable); color: var(--defavorable); }
+.graphe .noeud rect { fill: var(--papier); stroke: var(--filet-gras); }
+.graphe .noeud text { font: 600 12px/1 var(--police); fill: var(--encre-pale); }
+.graphe .noeud.epine rect { fill: var(--accent-fond); stroke: var(--accent-bord); }
+.graphe .noeud.epine text { fill: var(--accent-sombre); }
+.graphe .noeud.fin rect { fill: var(--accent); stroke: var(--accent); }
+.graphe .noeud.fin text { fill: var(--papier); }
+.legende-carte { font: 500 11px/1.5 var(--fixe); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--encre-tres-pale); margin: 10px 0 0; }

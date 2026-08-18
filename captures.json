@@ -1,0 +1,9 @@
+{
+  "images": [
+    { "sortie": "images/demo.gif", "type": "gif", "taille": [900, 700], "echelle": 1, "duree": 1100,
+      "fenetre": [900, 2600], "depart": 150, "hauteurUtile": 700,
+      "scenes": [ [], ["#part=0.006"], ["#part=0.018"], ["#part=0.030"], ["#part=0.012", "#heures=0"] ] },
+    { "sortie": "images/screen.png", "type": "png", "taille": [1100, 2600], "echelle": 2,
+      "depart": 150, "hauteurUtile": 780 }
+  ]
+}

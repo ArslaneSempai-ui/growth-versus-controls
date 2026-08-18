@@ -1,0 +1,24 @@
+{
+  "name": "growth-versus-controls",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The same change, two functions, opposite signs — and how often the disagreement is inside the noise.",
+  "scripts": {
+    "start": "node src/server.ts",
+    "arbitrer": "node src/arbitrage.ts",
+    "figures": "node src/readme.ts",
+    "pages": "tsc -p tsconfig.web.json && node src/pages.ts && node src/verifier-ecran.mjs . 4",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --noEmit && node src/emprunter.ts --check && node src/readme.ts --check && node --test src/*.test.ts",
+    "captures": "node src/capturer.mjs .",
+    "emprunter": "node src/emprunter.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^24.0.0"
+  }
+}
