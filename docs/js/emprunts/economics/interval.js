@@ -40,6 +40,23 @@ export function precision(successes, n) {
     return ((high - low) / 2) * 100;
 }
 /**
+ * Le seuil de confiance, et le fait qu'il est un choix.
+ *
+ * `z = 1.96` veut dire 95 %, et personne ne l'a décidé : c'est la valeur par défaut de
+ * `wilson()`, héritée sans discussion. Elle décide pourtant quelles trouvailles survivent —
+ * à 90 %, plusieurs ex æquo publiés deviennent des écarts, et à 99 % l'inverse.
+ *
+ * Une entrée qui détermine des conclusions et que personne n'a choisie explicitement est
+ * précisément ce que l'inventaire de provenance existe pour attraper. Elle est donc nommée,
+ * exportée, et déclarée `chosen` — pas `measured`, pas `assumed`. Mon jugement, et rien d'autre.
+ */
+export const CONFIANCE = { niveau: 0.95, z: 1.96 };
+/** Le z d'un niveau de confiance, pour balayer le seuil au lieu de le subir. */
+export function zPour(niveau) {
+    const table = [[0.80, 1.2816], [0.90, 1.6449], [0.95, 1.96], [0.99, 2.5758]];
+    return table.reduce((a, b) => (Math.abs(b[0] - niveau) < Math.abs(a[0] - niveau) ? b : a))[1];
+}
+/**
  * Below this many observations, a rate is not reported as a number.
  *
  * Twenty is not a magic figure: it is the point where the interval on a mid-range
@@ -47,8 +64,8 @@ export function precision(successes, n) {
  * point at which the measurement says anything at all.
  */
 export const ENOUGH = 20;
-export function rate(successes, n) {
-    const [low, high] = wilson(successes, n);
+export function rate(successes, n, z = CONFIANCE.z) {
+    const [low, high] = wilson(successes, n, z);
     return {
         successes, n,
         rate: n === 0 ? 0 : successes / n,
