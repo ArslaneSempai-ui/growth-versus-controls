@@ -132,4 +132,17 @@ const serveur = createServer(async (req, res) => {
   }
 });
 
-serveur.listen(PORT, () => console.log(`Growth versus controls → http://localhost:${PORT}`));
+/*
+ * `127.0.0.1` en second argument, et ce n'est pas une décoration.
+ *
+ * `listen(PORT)` sans hôte écoute sur **toutes les interfaces** : ce serveur de démonstration
+ * était offert à tout le réseau local pendant qu'il tournait. L'URL affichée disait
+ * `localhost`, ce qui donnait toutes les apparences d'un serveur local — le même piège que
+ * `python3 -m http.server` sans `--bind`, corrigé dans la couche partagée le 21 août 2026.
+ *
+ * Les neuf autres dépôts du portfolio nommaient déjà leur hôte. Celui-ci était le seul à ne
+ * pas le faire, et rien ne le disait : le contrôle qui garde cette règle ne balayait que les
+ * fichiers d'`identite`. Il vit maintenant dans `liaison.test.ts`, recopié dans chaque dépôt,
+ * et il regarde le dépôt où il tourne.
+ */
+serveur.listen(PORT, "127.0.0.1", () => console.log(`Growth versus controls → http://localhost:${PORT}`));
