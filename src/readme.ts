@@ -11,6 +11,7 @@ import { figures, table, type Blocks } from "./figures.ts";
 import { CAS, INVENTAIRE } from "./situation.ts";
 import { arbitrer, bascule, ceQuiTrancherait, clientsGagnes, desaccordReel, ecartConversion } from "./arbitrage.ts";
 import { MEANING, ORDER } from "./provenance.ts";
+import { fileURLToPath } from "node:url";
 import { isMain } from "./cli.ts";
 
 const dollars = (x: number) => (x < 0 ? "−" : "") + "$" + Math.round(Math.abs(x)).toLocaleString("en-GB");
@@ -65,7 +66,7 @@ const blocs: Blocks = { finding, decision, marche, leviers, provenance };
 
 if (isMain(import.meta)) {
   const mode = process.argv.includes("--check") ? "check" : "write";
-  const chemin = new URL("../README.md", import.meta.url).pathname;
+  const chemin = fileURLToPath(new URL("../README.md", import.meta.url));
   const r = figures(chemin, blocs, mode);
   if (mode === "check" && r.stale.length) {
     console.error(`${chemin} is stale: ${r.stale.join(", ")}`);

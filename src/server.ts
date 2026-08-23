@@ -12,6 +12,7 @@
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { CAS, type Situation } from "./situation.ts";
 import { arbitrer, bascule, ceQuiTrancherait, desaccordReel, ecartConversion } from "./arbitrage.ts";
 
@@ -91,20 +92,32 @@ export function etat() {
   };
 }
 
+/*
+ * Read the file first, then answer. Never the other way round.
+ *
+ * `writeHead` followed by `readFileSync` looks harmless and is not. When the read throws,
+ * the catch at the bottom of the handler tries to answer 400 on a response whose headers
+ * have already gone out; `writeHead` then raises ERR_HTTP_HEADERS_SENT *inside the catch*,
+ * where nothing is left to handle it, and the process exits on the very first request.
+ * The guard was written for precisely this failure and was unable to fire in it.
+ *
+ * Measured on 23 August 2026: this repository cloned into `mes projets/` — one space —
+ * killed the server on the first page load, and again under an accented directory name.
+ * Two defects had to meet for that: `.pathname` does not decode `%20` (fixed below with
+ * `fileURLToPath`), and the headers had already left. Either one alone is survivable.
+ */
+function fichier(res: ServerResponse, relatif: string, type: string): void {
+  const corps = readFileSync(fileURLToPath(new URL(relatif, import.meta.url)), "utf8");
+  res.writeHead(200, { "content-type": `${type}; charset=utf-8`, "cache-control": "no-store" });
+  res.end(corps);
+}
+
 const serveur = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
   try {
-    if (url.pathname === "/") {
-      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
-      res.end(readFileSync(new URL("./ui.html", import.meta.url).pathname, "utf8"));
-      return;
-    }
+    if (url.pathname === "/") return fichier(res, "./ui.html", "text/html");
     for (const [chemin, type] of [["/graphes.js", "text/javascript"], ["/registre.css", "text/css"]] as const) {
-      if (url.pathname === chemin) {
-        res.writeHead(200, { "content-type": `${type}; charset=utf-8`, "cache-control": "no-store" });
-        res.end(readFileSync(new URL("." + chemin, import.meta.url).pathname, "utf8"));
-        return;
-      }
+      if (url.pathname === chemin) return fichier(res, "." + chemin, type);
     }
     if (url.pathname === "/api/etat") return json(res, etat());
 
