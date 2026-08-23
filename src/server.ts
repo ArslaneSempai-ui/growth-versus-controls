@@ -53,6 +53,25 @@ export const BORNES = {
 } as const;
 
 /*
+ * A SETTING THAT WAS NOT SENT MUST NOT BE READ AS ZERO.
+ *
+ * The guard here used to be `const v = Number(recu[cle]); if (Number.isFinite(v))`, which
+ * cannot do the job it was written for: the coercion runs before the test. `Number(null)`,
+ * `Number("")`, `Number([])` and `Number(false)` are all `0`, `0` is inside every bound
+ * below, and so every spelling of "no value" silently pinned a setting to the bottom of its
+ * range. `Number.isFinite` then said yes to all four.
+ *
+ * This is not only a hostile-client story. The page sends `Number(el.value)`, which is `NaN`
+ * on an empty field, and `JSON.stringify` writes `NaN` as `null` — so the tool's own screen
+ * could set the undetected-risk share to zero and read back a verdict computed from it. A
+ * wrong verdict, correctly formatted, is the worst output this tool can produce.
+ *
+ * JSON has a number type; the screen sends numbers. Ask for one.
+ */
+const nombre = (x: unknown): number | undefined =>
+  (typeof x === "number" && Number.isFinite(x)) ? x : undefined;
+
+/*
  * Le champ du verdict, calculé une fois par le modèle.
  *
  * La carte demande « de quel côté est ce point ? » un millier de fois par rendu. Réécrire
@@ -124,13 +143,13 @@ const serveur = createServer(async (req, res) => {
     if (url.pathname === "/api/reglage" && req.method === "POST") {
       const recu = await corps(req);
       for (const [cle, [bas, haut]] of Object.entries(BORNES)) {
-        const v = Number(recu[cle]);
-        if (Number.isFinite(v)) (situation as any)[cle] = Math.min(haut, Math.max(bas, v));
+        const v = nombre(recu[cle]);
+        if (v !== undefined) (situation as any)[cle] = Math.min(haut, Math.max(bas, v));
       }
       /* La fourchette de croyance se règle aussi, et elle doit rester ordonnée. */
-      const cb = Number(recu.croyanceBas), ch = Number(recu.croyanceHaut);
-      if (Number.isFinite(cb)) situation.croyance.bas = Math.min(Math.max(0, cb), situation.croyance.haut);
-      if (Number.isFinite(ch)) situation.croyance.haut = Math.max(Math.min(BORNES.partNonDetectee[1], ch), situation.croyance.bas);
+      const cb = nombre(recu.croyanceBas), ch = nombre(recu.croyanceHaut);
+      if (cb !== undefined) situation.croyance.bas = Math.min(Math.max(0, cb), situation.croyance.haut);
+      if (ch !== undefined) situation.croyance.haut = Math.max(Math.min(BORNES.partNonDetectee[1], ch), situation.croyance.bas);
       return json(res, etat());
     }
 

@@ -116,3 +116,40 @@ test("un emprunt non comparé est nommé, et ne compte pas comme comparé", () =
     rmSync(base, { recursive: true, force: true });
   }
 });
+
+/*
+ * « Rien » n'est pas « zéro ».
+ *
+ * `Number(null)`, `Number("")`, `Number([])` et `Number(false)` valent tous `0`, et `0` est
+ * dans toutes les bornes : chaque façon d'écrire « pas de valeur » posait donc le réglage au
+ * bas de sa plage, et `Number.isFinite` disait oui aux quatre. Le témoin va dans les deux
+ * sens — un vrai nombre doit toujours passer, sinon la correction aurait simplement rendu
+ * l'API muette.
+ */
+test("une valeur qui n'est pas un nombre ne remplace pas le réglage par zéro", async () => {
+  const racine = copieHostile();
+  let fils: ChildProcess | undefined;
+  const lire = async (): Promise<number> => {
+    const e = await (await fetch("http://127.0.0.1:4683/api/etat")).json() as { situation: { partNonDetectee: number } };
+    return e.situation.partNonDetectee;
+  };
+  const poser = (corps: string) => fetch("http://127.0.0.1:4683/api/reglage",
+    { method: "POST", headers: { "content-type": "application/json" }, body: corps });
+  try {
+    fils = await demarrer(racine, 4683);
+    await poser(JSON.stringify({ partNonDetectee: 0.04 }));
+    assert.equal(await lire(), 0.04, "un vrai nombre doit être accepté");
+
+    for (const vide of ["null", '""', "[]", "false", '"0.01"']) {
+      await poser(`{"partNonDetectee":${vide}}`);
+      assert.equal(await lire(), 0.04, `${vide} n'est pas un nombre JSON et ne doit rien changer`);
+    }
+
+    /* Et le réglage reste réglable après coup : la garde ne doit pas geler l'API. */
+    await poser(JSON.stringify({ partNonDetectee: 0.02 }));
+    assert.equal(await lire(), 0.02);
+  } finally {
+    fils?.kill();
+    rmSync(racine, { recursive: true, force: true });
+  }
+});
