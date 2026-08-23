@@ -2,7 +2,7 @@
  * L'ÉCRAN SERVI DEPUIS UN CHEMIN QUI N'EST PAS SAGE.
  *
  * Two failures met here on 23 August 2026 and killed the process on the first request:
- * `new URL(…, import.meta.url).pathname` does not decode `%20`, so a repository cloned
+ * `fileURLToPath(new URL(…, import.meta.url))` does not decode `%20`, so a repository cloned
  * into `mes projets/` asked the filesystem for a directory that does not exist; and the
  * handler had already sent `writeHead(200)` before reading, so the catch that exists to
  * turn a read failure into a 400 raised ERR_HTTP_HEADERS_SENT instead — inside itself,
