@@ -266,8 +266,20 @@ test("aucune classe ni identifiant n'est cherché sans être posé quelque part"
   const LECTURE = /(?:querySelectorAll|querySelector|getElementById|closest|matches)\(\s*([`"'])(.*?)\1\s*\)/g;
   const CONSTRUIT = /(?:querySelectorAll|querySelector|getElementById|closest|matches)\(\s*(?:[`"'][^`"']*[`"']\s*\+|[A-Za-z_$])/g;
 
+  /*
+   * LES RETOURS À LA LIGNE SE PRÉSERVENT, MÊME QUAND PERSONNE N'EN DÉPEND ENCORE.
+   *
+   * Ce relevé-ci ne rapporte que des noms de jeton, donc écraser un bloc de commentaire par
+   * une espace ne le gênait pas. Mais une autre session a payé exactement ça sur deux de ses
+   * règles : **530 lignes de décalage** sur un fichier réel, et un diagnostic qu'on ne peut
+   * pas localiser ne se corrige pas, il s'ignore. Le jour où quelqu'un ajoute un numéro de
+   * ligne ici — ce que fait déjà le relevé des listes figées, vingt lignes plus haut — le
+   * piège se referme sans prévenir. On aligne donc les trois retraits de ce fichier sur la
+   * même conduite : ils remplacent, ils ne raccourcissent pas.
+   */
   const sansCommentaires = (t) => t
-    .replace(/\/\*[\s\S]*?\*\//g, " ").replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => "\n".repeat(m.split("\n").length - 1) + " ")
+    .replace(/<!--[\s\S]*?-->/g, (m) => "\n".repeat(m.split("\n").length - 1) + " ")
     .replace(/^\s*\/\/.*$/gm, " ");
 
   let corpus = "", brut = "", styles = "";
