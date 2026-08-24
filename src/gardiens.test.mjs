@@ -331,10 +331,23 @@ test("aucune classe ni identifiant n'est cherché sans être posé quelque part"
 
   const jamaisPoses = [];
   for (const t of jetons.keys()) {
-    const partout = (corpus.match(new RegExp("\\b" + t.replace(/[-]/g, "\\-") + "\\b", "g")) ?? []).length;
+    /*
+     * `\b` S'OUVRE APRÈS UN TRAIT D'UNION, ET C'EST UN CHEMIN DE FAUX VERT.
+     *
+     * `/\bprise\b/` se trouve dans « carte-prise » : une classe courte jamais posée
+     * paraîtrait donc posée dès qu'un nom composé la contient en suffixe, et ce cas — dont
+     * tout l'objet est de dire « ce sélecteur ne trouvera personne » — rendrait vert.
+     * Signalé par une autre session, qui se faisait citer « four routes » sur
+     * « seventy-four routes ».
+     *
+     * Mesuré avant de corriger : aucun jeton ne bascule aujourd'hui dans les six dépôts
+     * porteurs, donc la faute est latente et non active. On la retire quand même — elle
+     * coûte une ligne, et elle attend un nom composé pour se réveiller. */
+    const borne = (j) => new RegExp("(?<![\\w-])" + j.replace(/[-]/g, "\\-") + "(?![\\w-])", "g");
+    const partout = (corpus.match(borne(t)) ?? []).length;
     let dansLecture = 0;
     for (const m of corpus.matchAll(LECTURE)) {
-      dansLecture += (m[2].match(new RegExp("\\b" + t.replace(/[-]/g, "\\-") + "\\b", "g")) ?? []).length;
+      dansLecture += (m[2].match(borne(t)) ?? []).length;
     }
     if (partout - dansLecture === 0 && !offerts.has(t)) jamaisPoses.push(t);
   }
@@ -558,4 +571,24 @@ test("aucun module compilé pour le navigateur n'importe un module Node", (t) =>
     `${[...new Set(fautifs)].join(", ")} : importé dans la construction web et employant un `
     + `module Node. Le navigateur ne le résout pas, le module ne se charge pas, et la page `
     + `publiée est vide — pas amoindrie, vide. ${vus.size} fichier(s) suivis.`);
+});
+
+test("un jeton court n'est pas trouvé à l'intérieur d'un nom composé", () => {
+  /*
+   * Le témoin de la borne, éprouvé sur des littéraux : `\b` s'ouvre après un trait d'union,
+   * donc `/\bprise\b/` se trouve dans « carte-prise ». Sans cette borne, une classe jamais
+   * posée paraît posée dès qu'un nom composé la contient — et le cas dont l'objet est de
+   * dire « ce sélecteur ne trouvera personne » rend vert.
+   *
+   * Une autre session a payé la même chose dans l'autre sens : sa règle citait
+   * « four routes » sur « seventy-four routes », donc un diagnostic qu'on ne pouvait pas
+   * retrouver dans le fichier.
+   */
+  const borne = (j) => new RegExp("(?<![\\w-])" + j.replace(/[-]/g, "\\-") + "(?![\\w-])");
+  assert.equal(borne("prise").test("carte-prise"), false, "un suffixe ne compte pas comme une pose");
+  assert.equal(borne("carte").test("carte-prise"), false, "un préfixe non plus");
+  assert.equal(borne("carte-prise").test("carte-prise"), true, "le nom entier, lui, compte");
+  assert.equal(borne("prise").test('class="prise"'), true, "le jeton seul reste trouvé");
+  /* Et le pendant : la borne ne doit pas devenir si stricte qu'elle ne trouve plus rien. */
+  assert.equal(borne("tete").test(".pliable > .tete { }"), true, "un sélecteur CSS reste lisible");
 });
