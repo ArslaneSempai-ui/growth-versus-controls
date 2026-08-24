@@ -1,3 +1,6 @@
+/* PARTAGÉ — la source de ce fichier est ~/Documents/identite ; les dépôts du portfolio
+   en portent une copie identique. Corrigez-le DANS identite, puis recopiez. Corriger une
+   copie sur place fait refuser le commit, et le refus arrive après le travail. */
 /**
  * Is this module the one the user ran?
  *
@@ -26,3 +29,49 @@ export function isMain(meta) {
  * reference is enough to make a module unloadable if the guard around it is ever removed.
  */
 export const arg = (n) => args()?.[n];
+/**
+ * REFUSER UN DRAPEAU QU'ON NE CONNAÎT PAS.
+ *
+ * Le défaut que ceci ferme n'est pas un plantage, c'est pire : `npm run optimise --
+ * --nimportequoi` tournait entièrement, avec les réglages par défaut, et sortait 0. Un
+ * acheteur qui écrit `--fields` au lieu de `--field` obtient un résultat complet, juste, et
+ * qui ne répond pas à la question qu'il a posée — puis il le cite. Un succès qui ment sur ce
+ * qu'il a fait coûte plus cher qu'un échec, parce que rien ne le signale.
+ *
+ * Le refus nomme le drapeau ET liste ceux qui existent : sans la liste, le lecteur ne peut
+ * que deviner, et un refus sans issue se contourne en le retirant.
+ *
+ * `--` seul est laissé passer : c'est le séparateur de npm, pas un drapeau.
+ */
+export function refuserDrapeauxInconnus(connus, depuis = 2, jusqua) {
+    const argv = args();
+    if (argv === undefined)
+        return; /* pas de ligne de commande : rien à refuser */
+    /*
+     * `jusqua` — INDICE DE FIN EXCLUSIF, parce que tous les drapeaux d'une ligne ne sont pas
+     * les siens.
+     *
+     * `egress --every=250 src/measure.ts --cases=x.csv` en porte deux sortes : `--every` est à
+     * `egress`, `--cases` appartient à la commande QU'IL OBSERVE et doit lui être passé intact.
+     * Sans borne haute, la garde refuserait un drapeau parfaitement valide — et une garde qui
+     * refuse le travail légitime se fait retirer, pas corriger.
+     *
+     * L'appelant calcule la borne parce que lui seul sait où finit sa part : c'est la position
+     * du premier argument qui n'est pas à lui. Absente, on valide jusqu'au bout.
+     */
+    const inconnus = argv.slice(depuis, jusqua)
+        .filter((a) => a.startsWith("--") && a !== "--")
+        .map((a) => a.split("=")[0])
+        .filter((f) => !connus.includes(f));
+    if (inconnus.length === 0)
+        return;
+    const sortie = globalThis.process;
+    const dire = (l) => sortie?.stderr?.write?.(l + "\n");
+    dire(`Unknown option${inconnus.length > 1 ? "s" : ""}: ${inconnus.join(", ")}`);
+    dire(connus.length
+        ? `This command accepts: ${connus.join(", ")}`
+        : `This command accepts no options.`);
+    dire(`Nothing was run — a command that ignores an option you typed would answer a`);
+    dire(`question you did not ask, and look right doing it.`);
+    sortie?.exit?.(2);
+}
