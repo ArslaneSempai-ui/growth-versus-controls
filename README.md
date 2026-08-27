@@ -47,7 +47,7 @@ Customers gained lie between **367** and **9,708** a year. Analysts to hire acro
 
 This is why two institutions with the same measurement and the same assumptions can decide
 the opposite way and both be right: what matters is where their team already sits on the
-staircase. A model that charges analyst hours at an hourly rate hires three tenths of a
+staircase. A model that charges analyst hours at an hourly rate hires three hundredths of a
 person and cannot say this. The capacity assumptions are borrowed from
 [alert-triage-economics](https://github.com/ArslaneSempai-ui/alert-triage-economics), byte
 for byte, not rewritten from memory.
