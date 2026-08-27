@@ -15,3 +15,29 @@
 # `regulations.ts`, ce cas doit s'exécuter, et la porte le dira en refusant cette ligne.
 # Aucun cas ne s'ignore dans ce dépôt : la liste est vide, et la porte exige
 # qu'elle le reste. Le premier ignoré qui apparaîtra sera rouge.
+#
+# Les noms ci-dessous sont MESURÉS dans les conditions du runner — arbre isolé,
+# sans le dépôt voisin `identite`, qui ne vit que sur une machine de développement.
+# Mesurés sur la machine, ils étaient FAUX : le contrôle de couche partagée s'y
+# exécute et ne se serait jamais montré ici.
+#
+# ─── POURQUOI CE CONTRÔLE NE SERA PAS MIS EN CHAÎNE, ET C'EST DÉCIDÉ ───
+#
+# « les couches partagées sont bien celles d'identite » s'ignore ici parce qu'`identite` est
+# un dépôt PRIVÉ de développement : il ne vit pas sur un runner. La tentation est de l'y
+# cloner avec un jeton et une révision épinglée. Mesuré le 27/08/2026, c'est une fausse bonne
+# idée, pour une raison qui n'est pas le coût :
+#
+#   L'ÉPINGLE REND LA CHAÎNE AVEUGLE AU SEUL DÉFAUT QUI SE PRODUIT. Une épingle est un
+#   fichier versionné ; elle ne monte que lorsqu'une diffusion la fait monter. Or la panne
+#   réelle est « la source avance, les copies restent » — et dans cet état l'épingle nomme
+#   encore l'ancienne révision, les copies lui correspondent, et la chaîne est VERTE pendant
+#   que le dépôt est en retard. Épingler sur une branche mobile rend l'autre défaut : un
+#   rouge dont la cause a déjà changé quand on vient le lire.
+#
+# Ce contrôle a son domicile au CROCHET DE PRÉ-COMMIT, qui lance la suite entière sur toute
+# machine portant `identite` — c'est-à-dire toute machine qui peut légitimement toucher la
+# couche partagée, puisqu'elle se diffuse et ne s'édite pas sur place.
+#
+# Écrit ici pour que personne ne le retente en croyant l'inventer.
+les couches partagées sont bien celles d'identite
