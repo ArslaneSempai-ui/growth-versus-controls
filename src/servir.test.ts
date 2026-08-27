@@ -15,13 +15,15 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, mkdtempSync, rmSync, mkdirSync, existsSync } from "node:fs";
+import { cpSync, mkdtempSync, rmSync, mkdirSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawn, type ChildProcess } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { emprunter, A_COMPARER } from "./emprunter.ts";
+import { ressources } from "./pages.ts";
 
 const SRC = fileURLToPath(new URL(".", import.meta.url));
+const RACINE = fileURLToPath(new URL("..", import.meta.url));
 
 /** A copy of `src/` under a directory whose name contains a space and an accent. */
 function copieHostile(): string {
@@ -148,6 +150,184 @@ test("une valeur qui n'est pas un nombre ne remplace pas le réglage par zéro",
     /* Et le réglage reste réglable après coup : la garde ne doit pas geler l'API. */
     await poser(JSON.stringify({ partNonDetectee: 0.02 }));
     assert.equal(await lire(), 0.02);
+  } finally {
+    fils?.kill();
+    rmSync(racine, { recursive: true, force: true });
+  }
+});
+
+/*
+ * LA DÉMO PUBLIÉE, EXÉCUTÉE — PAS RELUE.
+ *
+ * `servir.test.ts` éprouvait déjà la garde du serveur, et elle tient. Mais le lecteur qui
+ * clique le lien du README ne lance pas le serveur : il exécute le shim de `docs/index.html`,
+ * qui portait encore la faute que le serveur avait corrigée quatre jours plus tôt —
+ * `Number(corps?.[cle])` avant `Number.isFinite`. Le correctif n'avait atteint qu'une porte
+ * sur les deux, et rien ne regardait l'autre : les contrôles de la démo vérifient les CHAMPS
+ * que le shim rend et les ROUTES qu'il connaît, jamais ce qu'il fait d'une valeur.
+ *
+ * Un contrôle qui lirait le texte du shim attraperait le motif d'aujourd'hui et manquerait
+ * celui de demain. On extrait donc le module de la page PUBLIÉE, on le charge tel quel — ses
+ * imports rendus absolus, sa `window` fournie — et on l'interroge. La couture se traverse :
+ * ce qui répond ici est l'objet que GitHub Pages sert.
+ */
+async function shimPublie(): Promise<(chemin: string, corps?: unknown) => Promise<any>> {
+  const page = RACINE + "docs/index.html";
+  assert.ok(existsSync(page),
+    `${page} absent — c'est la page que le lecteur exécute ; sans elle il n'y a rien à éprouver.`
+    + ` Reconstruire avec \`npm run pages\` ; un saut ici serait un vert vide.`);
+  const html = readFileSync(page, "utf8");
+  const m = /<script type="module">([\s\S]*?)<\/script>/.exec(html);
+  assert.ok(m, `aucun <script type="module"> dans ${page} : le shim ne se lit plus. Refus, pas zéro.`);
+  let corps = m[1]!;
+  assert.match(corps, /window\.LOCAL\s*=/,
+    "le premier module de la page publiée n'est pas le shim — le motif d'extraction est périmé,"
+    + " et il regarderait le mauvais bloc en rendant vert.");
+
+  /* Les imports du shim sont relatifs à `docs/` ; on les rend absolus pour l'exécuter hors page. */
+  const base = pathToFileURL(RACINE + "docs/").href;
+  corps = corps.replace(/(["'])\.\/js\//g, `$1${base}js/`);
+  assert.doesNotMatch(corps, /["']\.\/js\//, "un import du shim n'a pas été rendu absolu");
+
+  const bac = mkdtempSync(`${tmpdir()}/shim-arbitrage-`);
+  const fenetre: Record<string, any> = {};
+  const avant = (globalThis as any).window;
+  (globalThis as any).window = fenetre;
+  try {
+    const fichier = `${bac}/shim.mjs`;
+    writeFileSync(fichier, corps);
+    await import(pathToFileURL(fichier).href);
+  } finally {
+    (globalThis as any).window = avant;
+    rmSync(bac, { recursive: true, force: true });
+  }
+  assert.equal(typeof fenetre.LOCAL, "function", "le shim publié n'a pas posé window.LOCAL");
+  return fenetre.LOCAL;
+}
+
+/*
+ * « Rien » n'est pas « zéro », côté démo publiée.
+ *
+ * Zéro est une valeur légitime et le bas de chaque plage : il n'est donc PAS dans la liste
+ * ci-dessous. Ce qui est éprouvé est que chaque façon d'écrire « pas de valeur » ne se
+ * transforme plus en ce zéro-là. Et le témoin va dans les deux sens — un vrai nombre doit
+ * toujours passer, sinon la correction aurait simplement rendu la démo inerte, ce qu'aucun
+ * des contrôles existants ne verrait.
+ */
+test("la démo publiée ne lit pas « pas de valeur » comme un zéro", async () => {
+  const LOCAL = await shimPublie();
+  const part = async () => (await LOCAL("/api/etat")).situation.partNonDetectee;
+
+  await LOCAL("/api/reglage", { partNonDetectee: 0.04 });
+  assert.equal(await part(), 0.04, "un vrai nombre doit être accepté");
+
+  for (const vide of [null, undefined, "", "   ", [], false, "0.01"]) {
+    await LOCAL("/api/reglage", { partNonDetectee: vide });
+    assert.equal(await part(), 0.04,
+      `${JSON.stringify(vide) ?? "undefined"} n'est pas un nombre et ne doit pas poser le réglage au bas de sa plage`);
+  }
+
+  /* La fourchette de croyance passait par la même porte, et son bas est zéro lui aussi. */
+  const bas = async () => (await LOCAL("/api/etat")).situation.croyance.bas;
+  const depart = await bas();
+  assert.ok(depart > 0, "le cas de référence doit défendre un bas non nul, sinon ce témoin ne prouve rien");
+  for (const vide of [null, "", [], false]) {
+    await LOCAL("/api/reglage", { croyanceBas: vide });
+    assert.equal(await bas(), depart,
+      `${JSON.stringify(vide)} ne doit pas ramener le bas de la fourchette à zéro`);
+  }
+
+  /* Et la démo reste réglable : une garde qui ferme la route n'a rien corrigé. */
+  await LOCAL("/api/reglage", { partNonDetectee: 0.02 });
+  assert.equal(await part(), 0.02, "la garde ne doit pas geler le réglage");
+});
+
+/*
+ * CE QUE LA PAGE PUBLIÉE DEMANDE, ET CE QUE `docs/` PORTE.
+ *
+ * La liste des fichiers copiés dans `docs/` était écrite à la main, en double avec la
+ * réécriture des chemins absolus. Une ressource AJOUTÉE à `ui.html` n'aurait rien cassé :
+ * non copiée, chemin laissé absolu, 404 depuis la racine du site — et vert partout, parce
+ * qu'en local la page est servie par `server.ts`, qui lit dans `src/`.
+ *
+ * Les deux sens sont éprouvés : la dérivation couvre ce que l'écran demande, et elle REFUSE
+ * quand elle cesse de lire la page au lieu de rendre une liste vide qu'on copierait sans un mot.
+ */
+test("les ressources de la démo publiée sont dérivées de l'écran, et la dérivation sait refuser", () => {
+  const ui = readFileSync(SRC + "ui.html", "utf8");
+  const attendues = ressources(ui);
+
+  const manquantes = attendues.filter((f) => !existsSync(RACINE + "docs/" + f));
+  assert.deepEqual(manquantes, [],
+    `${manquantes.join(", ")} : demandé par src/ui.html, absent de docs/ — 404 en ligne, invisible en local`);
+
+  const page = readFileSync(RACINE + "docs/index.html", "utf8");
+  const absolus = attendues.filter((f) => page.includes(`"/${f}"`));
+  assert.deepEqual(absolus, [],
+    `${absolus.join(", ")} : chemin absolu resté dans docs/index.html — GitHub Pages sert un sous-dossier`);
+
+  assert.throws(() => ressources(ui.replace(/"\/[A-Za-z0-9_.-]+\.css"/g, '"./ailleurs.css"')),
+    /aucune ressource css/,
+    "une dérivation qui ne trouve plus la feuille de style doit refuser, pas rendre une liste courte");
+  assert.throws(() => ressources("<html></html>"), /aucune ressource/,
+    "une page sans ressource reconnue est un motif périmé, pas une page sans ressource");
+});
+
+/*
+ * LA BOUCLE LOCALE N'EST PAS UNE FRONTIÈRE.
+ *
+ * `liaison.test.ts` garde l'adresse d'écoute, et elle tient : ce serveur ne parle qu'à la
+ * machine. Cela le met hors de portée du RÉSEAU, pas hors de portée du NAVIGATEUR — n'importe
+ * quelle page ouverte par ailleurs pouvait poster sur `/api/reglage`, sans requête préalable,
+ * et poser la part de risque non détectée, le prix d'un incident et la fourchette défendue.
+ * L'absence d'en-têtes CORS empêche seulement l'attaquant de LIRE la réponse ; l'état a déjà
+ * changé, et le lecteur revient à son onglet devant un verdict calculé sur des entrées qu'il
+ * n'a pas choisies.
+ *
+ * Le témoin va dans QUATRE sens, parce qu'une garde d'origine se casse aussi bien en laissant
+ * passer qu'en refusant tout le monde — et le second se paie par un retrait, pas par un bug.
+ */
+test("une page étrangère ne peut pas poser les réglages de ce serveur", async () => {
+  const racine = copieHostile();
+  let fils: ChildProcess | undefined;
+  const HOTE = "http://127.0.0.1:4684";
+  const lire = async (): Promise<number> => {
+    const e = await (await fetch(HOTE + "/api/etat")).json() as { situation: { partNonDetectee: number } };
+    return e.situation.partNonDetectee;
+  };
+  const poser = (valeur: number, origine?: string) => fetch(HOTE + "/api/reglage", {
+    method: "POST",
+    headers: { "content-type": "application/json", ...(origine ? { origin: origine } : {}) },
+    body: JSON.stringify({ partNonDetectee: valeur }),
+  });
+  try {
+    fils = await demarrer(racine, 4684);
+
+    /* 1 — sans Origin : curl, un cas de test, un formulaire de même origine. Doit passer. */
+    await poser(0.04);
+    assert.equal(await lire(), 0.04, "une requête sans Origin doit passer — sinon la garde ferme l'outil");
+
+    /* 2 — l'écran servi PAR ce serveur porte le même hôte que la requête. Doit passer. */
+    await poser(0.03, HOTE);
+    assert.equal(await lire(), 0.03, "l'écran de ce serveur doit rester accepté sous son propre hôte");
+
+    /* 3 — une page ouverte ailleurs. Doit être refusée, ET ne rien avoir changé. */
+    const refus = await poser(0.055, "https://page-hostile.example");
+    assert.equal(refus.status, 403, "une origine étrangère doit être refusée");
+    assert.equal((await refus.json() as { erreur?: string }).erreur, "origine_etrangere");
+    assert.equal(await lire(), 0.03, "le refus doit arriver AVANT l'écriture, pas après");
+
+    /* 4 — la remise à zéro écrit elle aussi : elle passe par la même porte. */
+    const remise = await fetch(HOTE + "/api/remise", {
+      method: "POST", headers: { origin: "https://page-hostile.example" },
+    });
+    assert.equal(remise.status, 403, "/api/remise écrit l'état : elle est gardée comme /api/reglage");
+    assert.equal(await lire(), 0.03, "une remise étrangère ne doit pas avoir eu lieu");
+
+    /* 5 — et la lecture reste ouverte : un GET inter-origine n'est pas relisable sans CORS,
+       le refuser casserait l'inclusion de l'écran sans rien fermer. */
+    const lecture = await fetch(HOTE + "/api/etat", { headers: { origin: "https://page-hostile.example" } });
+    assert.equal(lecture.status, 200, "un GET inter-origine ne doit pas être refusé");
   } finally {
     fils?.kill();
     rmSync(racine, { recursive: true, force: true });

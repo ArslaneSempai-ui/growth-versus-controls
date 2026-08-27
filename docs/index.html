@@ -77,17 +77,34 @@ const etat = () => ({
   resolution: RESOLUTION,
 });
 
+/*
+ * « PAS DE VALEUR » NE SE LIT PAS ZÉRO — la même garde que le serveur, ici aussi.
+ *
+ * Le serveur porte cette garde depuis le 23 août 2026, avec son explication. Le shim ne l'a
+ * pas reçue, et c'est LUI que le lecteur exécute en cliquant le lien : la porte corrigée
+ * n'était pas la porte ouverte. Number(null), Number(""), Number([]) et Number(false) valent
+ * tous 0, 0 est dans toutes les bornes, et Number.isFinite disait oui aux quatre — chaque
+ * façon d'écrire « pas de valeur » posait le réglage au bas de sa plage, et la page publiée
+ * rendait un verdict correctement mis en forme calculé dessus.
+ *
+ * La conversion était posée AVANT la garde. On demande un nombre au lieu d'en fabriquer un.
+ *
+ * (Aucun accent grave dans ce bloc : il vit dans un gabarit, et le premier accent grave
+ * refermerait la chaîne quinze lignes avant sa fin.)
+ */
+const nombre = (x) => (typeof x === "number" && Number.isFinite(x)) ? x : undefined;
+
 window.LOCAL = async (chemin, corps) => {
   if (chemin === "/api/etat") return etat();
   if (chemin === "/api/remise") { situation = structuredClone(CAS); return etat(); }
   if (chemin === "/api/reglage") {
     for (const [cle, [bas, haut]] of Object.entries(BORNES)) {
-      const v = Number(corps?.[cle]);
-      if (Number.isFinite(v)) situation[cle] = Math.min(haut, Math.max(bas, v));
+      const v = nombre(corps?.[cle]);
+      if (v !== undefined) situation[cle] = Math.min(haut, Math.max(bas, v));
     }
-    const cb = Number(corps?.croyanceBas), ch = Number(corps?.croyanceHaut);
-    if (Number.isFinite(cb)) situation.croyance.bas = Math.min(Math.max(0, cb), situation.croyance.haut);
-    if (Number.isFinite(ch)) situation.croyance.haut = Math.max(Math.min(BORNES.partNonDetectee[1], ch), situation.croyance.bas);
+    const cb = nombre(corps?.croyanceBas), ch = nombre(corps?.croyanceHaut);
+    if (cb !== undefined) situation.croyance.bas = Math.min(Math.max(0, cb), situation.croyance.haut);
+    if (ch !== undefined) situation.croyance.haut = Math.max(Math.min(BORNES.partNonDetectee[1], ch), situation.croyance.bas);
     return etat();
   }
   return {};

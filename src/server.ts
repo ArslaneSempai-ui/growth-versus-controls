@@ -131,8 +131,56 @@ function fichier(res: ServerResponse, relatif: string, type: string): void {
   res.end(corps);
 }
 
+/*
+ * CETTE REQUÊTE VIENT-ELLE D'UNE PAGE QUE CE SERVEUR N'A PAS SERVIE ?
+ *
+ * Écouter sur la boucle locale met l'outil hors de portée du RÉSEAU, pas hors de portée du
+ * NAVIGATEUR. N'importe quelle page ouverte par ailleurs peut poster sur `localhost` : sous
+ * sa forme simple il n'y a pas de requête préalable, et l'absence d'en-têtes CORS empêche
+ * seulement l'attaquant de LIRE la réponse — l'état a déjà changé quand elle arrive. Ici cela
+ * veut dire que la part de risque non détectée, le prix d'un incident et la fourchette
+ * défendue peuvent être posés depuis l'extérieur : le lecteur revient à son onglet et lit un
+ * verdict correctement mis en forme, calculé sur des entrées qu'il n'a pas choisies.
+ *
+ * ON COMPARE À L'HÔTE DE LA REQUÊTE, PAS À UNE LISTE ÉCRITE. La forme qui vient d'abord à
+ * l'esprit — `origine === "http://localhost:4600"` — refuse l'écran DE CE SERVEUR dès qu'il
+ * est servi sous un autre nom : un port choisi par PORT=, une machine de démonstration, un
+ * relais. Une garde qui refuse un usage légitime se fait retirer à la première plainte, et
+ * elle emporte le trou avec elle. Une page servie PAR ce serveur porte forcément le même hôte
+ * que la requête qu'elle émet ; une page hostile en porte un autre.
+ *
+ * Pas d'`Origin` du tout : on laisse passer. C'est curl, un cas de test, un formulaire de
+ * même origine. Les navigateurs l'envoient sur toute requête inter-origine, et c'est
+ * exactement le cas que cette garde couvre.
+ *
+ * La même garde est portée par economics, banc, funnel, rag et cascade. Elle manquait ici.
+ */
+export function origineEtrangere(req: IncomingMessage): boolean {
+  const origine = req.headers.origin;
+  if (!origine) return false;
+  try {
+    return new URL(origine).host !== req.headers.host;
+  } catch {
+    /* Une origine qui ne s'analyse pas n'est pas une origine que ce serveur a servie. */
+    return true;
+  }
+}
+
 const serveur = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
+
+  /*
+   * Seulement les méthodes qui changent quelque chose. Un GET inter-origine ne peut pas être
+   * relu sans en-têtes CORS, et le refuser casserait l'inclusion de cet écran, qui est
+   * légitime.
+   */
+  if (req.method !== "GET" && req.method !== "HEAD" && origineEtrangere(req)) {
+    return json(res, {
+      erreur: "origine_etrangere",
+      dit: "cette requête vient d'une page que ce serveur n'a pas servie",
+    }, 403);
+  }
+
   try {
     if (url.pathname === "/") return fichier(res, "./ui.html", "text/html");
     for (const [chemin, type] of [["/graphes.js", "text/javascript"], ["/registre.css", "text/css"]] as const) {
