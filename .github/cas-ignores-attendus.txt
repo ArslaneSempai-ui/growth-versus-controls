@@ -1,0 +1,17 @@
+# Les cas qui s'ignorent ICI, nommés un par un, avec la raison.
+#
+# La porte (`verifier-ignores.sh`) compare l'ENSEMBLE EXACT des noms ignorés à cette liste.
+# Un ignoré absent d'ici est un contrôle qui vient de s'éteindre — rouge. Une ligne d'ici
+# dont le cas s'exécute désormais est une liste qui ment — rouge aussi, et l'issue est de
+# la resserrer, jamais de l'élargir sans une raison écrite du même genre que celles-ci.
+#
+# Un cas ignoré n'est pas un cas passé. Sur le dépôt voisin, la construction est restée
+# verte pendant que la promesse centrale du produit n'était éprouvée sur rien : le cas qui
+# la vérifiait s'ignorait faute de ressource, et un simple compte ne l'aurait pas dit.
+
+# Ce dépôt ne porte pas de seuils réglementaires : le cas de fraîcheur des dates de relevé
+# n'a rien à examiner. Il s'ignore APRÈS avoir balayé — l'absence est mesurée, pas supposée —
+# ce qui est le bon comportement, mais il doit rester nommé : le jour où ce dépôt gagne un
+# `regulations.ts`, ce cas doit s'exécuter, et la porte le dira en refusant cette ligne.
+# Aucun cas ne s'ignore dans ce dépôt : la liste est vide, et la porte exige
+# qu'elle le reste. Le premier ignoré qui apparaîtra sera rouge.

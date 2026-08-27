@@ -1,0 +1,69 @@
+# Les tests ne valent que s'ils tournent sans qu'on y pense.
+#
+# ─── POURQUOI CE FICHIER EXISTE, ET CE QU'IL REMPLACE ───
+#
+# Le 27 août 2026, sept dépôts publics de ce portfolio affichaient un vert d'intégration
+# continue qui ne mesurait rien : le seul tour enregistré était « pages build and
+# deployment », c'est-à-dire GitHub copiant des fichiers vers son hébergement. Aucune suite
+# ne tournait. Le vert était sincère et vide — il ne POUVAIT PAS rougir sur un défaut de
+# code, quel qu'il soit.
+#
+# C'est pire que pas de vert du tout, parce qu'il rassure. Le relevé qui l'a trouvé
+# regardait les conclusions sans lire le NOM du tour ; c'est le nom qui trahissait tout.
+name: verifier
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# ─── LE JETON N'A QUE CE QU'IL LUI FAUT ───
+#
+# Sans ce bloc, GitHub donne au jeton de la passe les droits par défaut du dépôt, écriture
+# comprise. Signalé par CodeQL sur le dépôt voisin — « Workflow does not contain
+# permissions ». Ce n'est pas théorique : la passe tourne aussi sur `pull_request`, donc sur
+# du code que quelqu'un d'extérieur propose. Une passe qui lit et lance des cas n'a besoin
+# que de lire.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # L'HISTORIQUE ENTIER. `checkout` clone à profondeur 1 par défaut : un seul
+          # commit. Plusieurs cas de ce portfolio interrogent git — qu'un relevé livré cite
+          # un commit qui existe, qu'un scellé précède la mesure qu'il régit. Sur un clone
+          # tronqué ils tombent tous, et ils ont raison de tomber : l'historique n'est pas
+          # là. Cinq passes rouges d'affilée sur le dépôt voisin avant qu'on lise les
+          # journaux plutôt que de supposer.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm install
+
+      # ─── UN CAS IGNORÉ N'EST PAS UN CAS PASSÉ ───
+      #
+      # `npm test` rend 0 quand des cas s'ignorent. Sur le dépôt voisin, la construction est
+      # restée verte pendant que la promesse centrale du produit n'était éprouvée sur rien :
+      # le cas qui la vérifiait s'ignorait faute de ressource. 104 passés, 1 ignoré, et
+      # l'ignoré était celui-là.
+      #
+      # La porte est NOMINATIVE, pas un plafond : un plafond serait un vert vide de plus —
+      # n'importe quel contrôle pourrait s'éteindre tant qu'un autre se rallume. Elle
+      # compare l'ensemble EXACT des noms à `cas-ignores-attendus.txt`, et refuse dans les
+      # deux sens : un ignoré nouveau est rouge, un ignoré disparu aussi (la liste ment,
+      # on la resserre).
+      #
+      # `pipefail` parce qu'un tube mange le code de sortie de `npm test` : sans lui, la
+      # suite pourrait échouer et la passe continuer jusqu'à la porte, qui conclurait sur
+      # une sortie tronquée.
+      - name: suite, et aucun cas ignoré hors de la liste nominative
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee /tmp/suite.txt
+          sh .github/verifier-ignores.sh /tmp/suite.txt .github/cas-ignores-attendus.txt
