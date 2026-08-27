@@ -127,10 +127,10 @@ export function ressources(html: string): string[] {
   const manque = ["js", "css"].filter((ext) => !noms.some((n) => n.endsWith("." + ext)));
   if (manque.length) {
     throw new Error(
-      `src/ui.html : aucune ressource ${manque.join(" ni ")} à la racine parmi ${noms.length} trouvée(s)`
-      + `${noms.length ? ` (${noms.join(", ")})` : ""} — la dérivation ne lit plus la page.`
-      + ` Ce n'est pas une page sans ressource : c'est un motif périmé, et il rendrait une `
-      + `démo publiée à laquelle il manque des fichiers, sans que rien ne devienne rouge.`);
+      `src/ui.html: no ${manque.join(" or ")} resource at the root among ${noms.length} found`
+      + `${noms.length ? ` (${noms.join(", ")})` : ""} — the derivation no longer reads the page.`
+      + ` This is not a page without resources: it is a stale pattern, and it would ship a `
+      + `published demo with files missing, without anything turning red.`);
   }
   return noms;
 }

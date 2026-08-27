@@ -267,9 +267,9 @@ test("les ressources de la démo publiée sont dérivées de l'écran, et la dé
     `${absolus.join(", ")} : chemin absolu resté dans docs/index.html — GitHub Pages sert un sous-dossier`);
 
   assert.throws(() => ressources(ui.replace(/"\/[A-Za-z0-9_.-]+\.css"/g, '"./ailleurs.css"')),
-    /aucune ressource css/,
+    /no css resource/,
     "une dérivation qui ne trouve plus la feuille de style doit refuser, pas rendre une liste courte");
-  assert.throws(() => ressources("<html></html>"), /aucune ressource/,
+  assert.throws(() => ressources("<html></html>"), /no js or css resource/,
     "une page sans ressource reconnue est un motif périmé, pas une page sans ressource");
 });
 
