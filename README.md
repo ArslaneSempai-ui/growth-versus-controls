@@ -17,7 +17,7 @@ grab the point on the map and read the verdict where you put it. Nothing is uplo
 ```bash
 npm run arbitrer     # the verdict, the flip point, and what would settle it
 npm run figures      # regenerate the blocks in this README from the model
-npm test             # types, borrowed models, and <!--p:portfolio.parDepot.arbitrage-->72<!--/p--> tests
+npm test             # types, borrowed models, and <!--p:portfolio.parDepot.arbitrage-->74<!--/p--> tests
 ```
 
 ---
