@@ -47,7 +47,7 @@ export function wilson(successes, n, z = 1.96) {
      */
     if (!Number.isFinite(successes) || successes < 0 || successes > n) {
         throw new Error(`wilson(${successes}, ${n}): a success count outside [0, n].\n`
-            + "  An interval cannot absorb this — it would return NaN, and NaN compares silently as\n"
+            + "  An interval cannot absorb this: it would return NaN, and NaN compares silently as\n"
             + "  \"not separable\". The defect is in the counting, upstream.");
     }
     const p = successes / n;
@@ -127,7 +127,7 @@ export function rate(successes, n, z = CONFIANCE.z) {
  */
 export function cellulesDeTaux(r, digits = 1) {
     if (!r.reportable)
-        return { taux: "— too few to quote", intervalle: `n < ${ENOUGH}` };
+        return { taux: "n/a: too few to quote", intervalle: `n < ${ENOUGH}` };
     return {
         taux: `${(r.rate * 100).toFixed(digits)} %`,
         intervalle: `[${(r.low * 100).toFixed(0)}–${(r.high * 100).toFixed(0)}]`,
@@ -135,7 +135,7 @@ export function cellulesDeTaux(r, digits = 1) {
 }
 export function writeRate(r, digits = 1) {
     if (!r.reportable)
-        return `— (n=${r.n}, too few to quote)`;
+        return `n/a (n=${r.n}, too few to quote)`;
     return `${(r.rate * 100).toFixed(digits)} % [${(r.low * 100).toFixed(0)}–${(r.high * 100).toFixed(0)}], n=${r.n}`;
 }
 /**
@@ -218,7 +218,7 @@ export function pairedVerdict(gains, regressions) {
         /** Can this set tell the two versions apart at all? */
         decidable: p < 0.05,
         note: p < 0.05
-            ? "the set distinguishes these versions"
-            : "the set cannot distinguish these versions by rate — judge the broken cases instead",
+            ? "The set distinguishes these versions"
+            : "The set cannot distinguish these versions by rate, so judge the broken cases instead",
     };
 }
