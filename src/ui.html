@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Growth versus controls — and whether the argument can be settled</title>
+<title>Growth versus controls, and whether the argument can be settled</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23eeece6'/%3E%3Cpath d='M3 11h4V5H3zM9 11h4V8H9z' fill='%2314603f'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="/registre.css" />
 </head>
@@ -79,14 +79,14 @@ const T = {
     suiteNonTranchable: "<b>The interval contains zero.</b> This evidence cannot decide the sign. The honest answer is that we do not know.",
     suiteSigne: (par) => par === "le test"
       ? "And it is the test that decides it."
-      : "Careful: that sign is <b>not</b> decided by the test — it is decided by the assumptions. The test sets the size.",
+      : "Careful: that sign is <b>not</b> decided by the test; it is decided by the assumptions. The test sets the size.",
 
     dedansOui: "Both positions are coherent: this disagreement is settled by a measurement, not by a meeting.",
     dedansNonBas: "Even the most optimistic reading favours the controls.",
     dedansNonHaut: "Even the most cautious reading favours the change.",
 
     titreCarte: "Where are you on the map?",
-    figCarteTitre: "The verdict over both unknowns — grab the point",
+    figCarteTitre: "The verdict over both unknowns: grab the point",
     figCarteAria: "A map of the verdict over two axes: the undetected-risk share and the cost of one incident. The point marks the position taken and can be dragged with mouse or finger.",
     axeX: "share of gained customers who are an undetected risk",
     axeY: "cost of one incident",
@@ -109,7 +109,7 @@ const T = {
     reglageCroyanceBas: "low end of what is defended",
     reglageCroyanceHaut: "high end of what is defended",
     remise: "Back to the starting case",
-    provenance: "measured · assumed · chosen — every input carries its provenance, and the verdict's uncertainty comes first from the assumed ones.",
+    provenance: "measured · assumed · chosen: every input carries its provenance, and the verdict's uncertainty comes first from the assumed ones.",
 };
 
 /* Le champ vient du modèle : la page lit, elle ne recalcule pas. */
@@ -231,7 +231,7 @@ function blocLeviers() {
   const l = etat.leviers;
   $("#leviers").innerHTML = `<section class="feuillet"><div class="corps">
     <div class="suite">${L.suiteLeviersLong(
-      l.map((x) => `<b>${esc(x.quoi)}</b> — ${x.utile ? L.tranche : L.tranchePas}`).join(" · "))}</div>
+      l.map((x) => `<b>${esc(x.quoi)}</b>: ${x.utile ? L.tranche : L.tranchePas}`).join(" · "))}</div>
   </div></section>`;
 }
 

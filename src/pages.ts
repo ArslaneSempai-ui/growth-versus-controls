@@ -96,7 +96,7 @@ window.LOCAL_POSE && window.LOCAL_POSE();
 ` + "</" + "script>\n";
 
 const BANNIERE = `<p class="renvoi" style="margin-bottom:1.5rem">
-This is the whole model, running in your browser — no server, nothing uploaded.
+This is the whole model, running in your browser. No server, nothing uploaded.
 <b>Grab the point on the map</b> and read the verdict where you put it: its two axes are
 the numbers nobody measures, and the whole argument turns on them.
 <a href="https://github.com/ArslaneSempai-ui/growth-versus-controls">Source and method</a>.
@@ -128,7 +128,7 @@ export function ressources(html: string): string[] {
   if (manque.length) {
     throw new Error(
       `src/ui.html: no ${manque.join(" or ")} resource at the root among ${noms.length} found`
-      + `${noms.length ? ` (${noms.join(", ")})` : ""} — the derivation no longer reads the page.`
+      + `${noms.length ? ` (${noms.join(", ")})` : ""}. The derivation no longer reads the page.`
       + ` This is not a page without resources: it is a stale pattern, and it would ship a `
       + `published demo with files missing, without anything turning red.`);
   }
@@ -152,7 +152,7 @@ export function construire(): void {
   html = html.replace('<script type="module">', SHIM + '<script type="module">');
   writeFileSync(docs + "index.html", html);
 
-  console.log(`docs/ built — ${assets.length} ressource(s) dérivée(s) de src/ui.html : ${assets.join(", ")}`);
+  console.log(`docs/ built, ${assets.length} ressource(s) dérivée(s) de src/ui.html : ${assets.join(", ")}`);
 }
 
 if (isMain(import.meta)) construire();

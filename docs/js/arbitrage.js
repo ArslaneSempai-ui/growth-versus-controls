@@ -171,7 +171,7 @@ export function desaccordReel(s) {
         bascule: b,
         dedans,
         partPourLeChangement,
-        qui: dedans ? "both positions are coherent — this needs a measurement, not a meeting"
+        qui: dedans ? "both positions are coherent: this needs a measurement, not a meeting"
             : b <= s.croyance.bas ? "even the most optimistic reading favours the controls"
                 : "even the most cautious reading favours the change",
     };
@@ -233,7 +233,7 @@ if (isMain(import.meta)) {
     console.log(`  controls say           ${dollars(-v.controle.centre)} a year`);
     console.log(`  net                    ${dollars(v.net.centre)}  [${dollars(v.net.bas)} … ${dollars(v.net.haut)}]`);
     console.log(`\n  ${v.tranchable
-        ? `settled: the sign holds across the interval — ${v.sens} wins`
+        ? `settled: the sign holds across the interval; ${v.sens} wins`
         : "NOT settled: the interval spans zero. This evidence cannot decide the sign."}`);
     const b = bascule(s);
     if (b !== null) {
@@ -249,7 +249,7 @@ if (isMain(import.meta)) {
     console.log(`\n  analysts to hire       ${v.analystes.bas} at the low end, ${v.analystes.haut} at the high end`);
     if (v.enjambeUneMarche) {
         console.log(`  → the same test says both "costs nothing extra" and "costs a whole salary".`);
-        console.log(`    Not a contradiction — capacity is bought whole, and the interval straddles a hire.`);
+        console.log(`    Not a contradiction: capacity is bought whole, and the interval straddles a hire.`);
     }
     console.log(`\n  what would settle it:`);
     for (const l of ceQuiTrancherait(s)) {

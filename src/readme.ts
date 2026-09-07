@@ -24,10 +24,10 @@ const d = desaccordReel(CAS);
 
 const finding = (() => {
   const sens = v.sens === "croissance" ? "growth" : "the controls";
-  return `**The finding.** The A/B test settles that conversion rises — ${pc(e.centre)} ` +
+  return `**The finding.** The A/B test settles that conversion rises: ${pc(e.centre)} ` +
     `[${pc(e.bas)} … ${pc(e.haut)}]. It does **not** settle the decision. The sign of the net ` +
     `is set by an assumption nobody measures, and it flips at an undetected-risk share of ` +
-    `**${pc(d.bascule)}** — inside the range both functions are prepared to defend. ` +
+    `**${pc(d.bascule)}**, inside the range both functions are prepared to defend. ` +
     `Running the test larger cannot settle it; measuring that share can.`;
 })();
 
@@ -46,7 +46,7 @@ const marche = (() => {
   return `Customers gained lie between **${nb(c.bas)}** and **${nb(c.haut)}** a year. Analysts to hire ` +
     `across that interval: **${v.analystes.bas}** at the low end, **${v.analystes.haut}** at the high end.` +
     (v.enjambeUneMarche
-      ? ` The same test therefore says both "costs nothing extra" and "costs a whole salary" — not a contradiction, a step. Capacity is bought whole.`
+      ? ` The same test therefore says both "costs nothing extra" and "costs a whole salary": not a contradiction, a step. Capacity is bought whole.`
       : ` The interval sits inside a single step, so capacity is not the question in this case.`);
 })();
 
@@ -59,7 +59,7 @@ const provenance = (() => {
   const lignes = ORDER.flatMap((p) =>
     INVENTAIRE.filter((f) => f.provenance === p).map((f) => [p, "`" + f.name + "`", f.what, f.note ?? ""]));
   return table(["", "Input", "What it is", "Why it is that kind"], lignes) +
-    `\n\n${ORDER.map((p) => `**${p}** — ${MEANING[p].means}`).join("  \n")}`;
+    `\n\n${ORDER.map((p) => `**${p}**: ${MEANING[p].means}`).join("  \n")}`;
 })();
 
 const blocs: Blocks = { finding, decision, marche, leviers, provenance };

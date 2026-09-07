@@ -1,15 +1,15 @@
 # Both sides are right, and that isn't enough
 
 A change to onboarding makes conversion rise and alerts rise. Growth brings an A/B test,
-controls bring a projection, and the two never share an axis. This tool puts them on one —
-in dollars a year, with the uncertainty carried through — and then answers the question the
+controls bring a projection, and the two never share an axis. This tool puts them on one,
+in dollars a year, with the uncertainty carried through, and then answers the question the
 meeting never asks: **can this evidence decide the sign at all?**
 
 <!-- figures:finding -->
-**The finding.** The A/B test settles that conversion rises — 2.10 % [0.15 % … 4.04 %]. It does **not** settle the decision. The sign of the net is set by an assumption nobody measures, and it flips at an undetected-risk share of **1.33 %** — inside the range both functions are prepared to defend. Running the test larger cannot settle it; measuring that share can.
+**The finding.** The A/B test settles that conversion rises: 2.10 % [0.15 % … 4.04 %]. It does **not** settle the decision. The sign of the net is set by an assumption nobody measures, and it flips at an undetected-risk share of **1.33 %**, inside the range both functions are prepared to defend. Running the test larger cannot settle it; measuring that share can.
 <!-- /figures:finding -->
 
-**[Try it in your browser →](https://arslanesempai-ui.github.io/growth-versus-controls/)** —
+**[Try it in your browser →](https://arslanesempai-ui.github.io/growth-versus-controls/)**.
 grab the point on the map and read the verdict where you put it. Nothing is uploaded.
 
 ![The same decision, from both sides](images/demo.gif)
@@ -35,14 +35,14 @@ The sign holds across the interval, and it is decided by **the assumptions**, no
 <!-- /figures:decision -->
 
 The interval comes from the test and nowhere else. It is computed with Newcombe's hybrid
-score method rather than by subtracting two Wilson intervals — the naive version is wider,
+score method rather than by subtracting two Wilson intervals; the naive version is wider,
 which looks cautious and is simply wrong. Its coverage is checked by simulation in the test
 suite, not taken from a remembered example.
 
 ## Capacity is bought whole
 
 <!-- figures:marche -->
-Customers gained lie between **367** and **9,708** a year. Analysts to hire across that interval: **0** at the low end, **1** at the high end. The same test therefore says both "costs nothing extra" and "costs a whole salary" — not a contradiction, a step. Capacity is bought whole.
+Customers gained lie between **367** and **9,708** a year. Analysts to hire across that interval: **0** at the low end, **1** at the high end. The same test therefore says both "costs nothing extra" and "costs a whole salary": not a contradiction, a step. Capacity is bought whole.
 <!-- /figures:marche -->
 
 This is why two institutions with the same measurement and the same assumptions can decide
@@ -64,7 +64,7 @@ for byte, not rewritten from memory.
 Enlarging the test is what the room always asks for. Here it narrows an interval whose sign
 never depended on it: as long as the test says conversion rises, the customers-gained
 interval is entirely positive, so the sign of the net is the sign of the per-customer
-margin — and the margin is made of assumptions.
+margin, and the margin is made of assumptions.
 
 ## Where every number comes from
 
@@ -77,19 +77,19 @@ margin — and the margin is made of assumptions.
 | assumed | `partAlertante` | share of gained customers that will alert | observable after the fact, never before |
 | assumed | `minutesParAlerte` | analyst minutes per alert | the one control-side figure a team usually does know |
 | assumed | `partNonDetectee` | share of gained customers who are a real risk and go undetected | the marginal population, not the book: these are the customers the control was stopping. Swept, not guessed. |
-| assumed | `croyance` | the range the two functions will each defend for that share | not a confidence interval — nobody measured. It is what each side is prepared to argue. |
+| assumed | `croyance` | the range the two functions will each defend for that share | not a confidence interval; nobody measured. It is what each side is prepared to argue. |
 | chosen | `coutRisqueNonDetecte` | cost of one undetected risk | fines, remediation and exit, averaged; a choice, and the verdict moves with it |
 
-**retrieved** — a public source says this, on the date recorded, in words linked from the page  
-**measured** — running the code in this repository produces it  
-**assumed** — an input nobody here can know; yours to supply  
-**chosen** — my judgement and nothing else
+**retrieved**: a public source says this, on the date recorded, in words linked from the page  
+**measured**: running the code in this repository produces it  
+**assumed**: an input nobody here can know; yours to supply  
+**chosen**: my judgement and nothing else
 <!-- /figures:provenance -->
 
 The undetected-risk share deserves a note of its own. It is **not** the book's risk rate.
 The customers this change gains are exactly the ones the control was stopping, so their risk
 rate is that of the marginal population, not the average. Using the book rate here assumes
-the control being removed was doing nothing — which is the conclusion, not the premise.
+the control being removed was doing nothing, which is the conclusion, not the premise.
 
 ## What this does not let you conclude
 

@@ -55,12 +55,12 @@ export function emprunter(controle: boolean, racines: { voisins: string; depot: 
 
     for (const outil of DEJA_LA) {
       const origine = `${voisins}identite/${outil}`;
-      if (!existsSync(origine)) { ignores.push(`${depot}/${outil} — source absente (${origine})`); continue; }
+      if (!existsSync(origine)) { ignores.push(`${depot}/${outil}, source absente (${origine})`); continue; }
       const contenu = readFileSync(origine, "utf8");
       if (controle) {
         compares++;
         if (!existsSync(cible + outil) || readFileSync(cible + outil, "utf8") !== contenu) {
-          ecarts.push(`${depot}/${outil} — absent ou divergent`);
+          ecarts.push(`${depot}/${outil} : absent ou divergent`);
         }
       } else { writeFileSync(cible + outil, contenu); copies++; }
     }
@@ -68,8 +68,8 @@ export function emprunter(controle: boolean, racines: { voisins: string; depot: 
       const contenu = readFileSync(source + f, "utf8");
       if (controle) {
         compares++;
-        if (!existsSync(cible + f)) { ecarts.push(`${depot}/${f} — jamais emprunté`); continue; }
-        if (readFileSync(cible + f, "utf8") !== contenu) ecarts.push(`${depot}/${f} — a divergé`);
+        if (!existsSync(cible + f)) { ecarts.push(`${depot}/${f} : jamais emprunté`); continue; }
+        if (readFileSync(cible + f, "utf8") !== contenu) ecarts.push(`${depot}/${f} : a divergé`);
         continue;
       }
       writeFileSync(cible + f, contenu); copies++;
@@ -84,14 +84,14 @@ export const A_COMPARER = EMPRUNTS.reduce((n, e) => n + e.fichiers.length, 0) + 
 if (isMain(import.meta)) {
   const controle = process.argv.includes("--check");
   const { copies, compares, ecarts, ignores, absent } = emprunter(controle);
-  if (absent) { console.log(`dépôt ${absent} absent — emprunt non vérifié`); process.exit(0); }
+  if (absent) { console.log(`dépôt ${absent} absent : emprunt non vérifié`); process.exit(0); }
   for (const i of ignores) console.error(`  non comparé : ${i}`);
   if (ecarts.length) {
-    console.error(controle ? "des modèles empruntés ont divergé — lancer `npm run emprunter`" : "emprunt incomplet :");
+    console.error(controle ? "des modèles empruntés ont divergé. Lancer `npm run emprunter`" : "emprunt incomplet :");
     for (const e of ecarts) console.error(`  ${e}`);
     process.exit(1);
   }
   console.log(controle
-    ? `modèles empruntés à jour — ${compares}/${A_COMPARER} fichier(s) comparés`
+    ? `modèles empruntés à jour : ${compares}/${A_COMPARER} fichier(s) comparés`
     : `${copies} fichier(s) empruntés`);
 }

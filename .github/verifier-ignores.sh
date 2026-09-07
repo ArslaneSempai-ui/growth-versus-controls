@@ -50,8 +50,8 @@ ECART=$(mktemp)
 if ! diff -u "$TRIES" "$VUS" > "$ECART" 2>&1; then
   echo "::error::les cas ignorés ne sont pas EXACTEMENT ceux que la liste attend."
   echo ""
-  echo "  (−) attendu et non vu : ce cas s'exécute désormais ici — la liste ment, resserrez-la."
-  echo "  (+) vu et non attendu : ce contrôle vient de s'éteindre — il n'a rien vérifié,"
+  echo "  (−) attendu et non vu : ce cas s'exécute désormais ici ; la liste ment, resserrez-la."
+  echo "  (+) vu et non attendu : ce contrôle vient de s'éteindre ; il n'a rien vérifié,"
   echo "      et une construction verte le cacherait. L'élargissement de la liste exige une"
   echo "      raison écrite dans $ATTENDUS, du même genre que celles qui y sont."
   echo ""
@@ -59,4 +59,4 @@ if ! diff -u "$TRIES" "$VUS" > "$ECART" 2>&1; then
   exit 1
 fi
 
-echo "$ignores cas ignoré(s), tous attendus et nommés dans $ATTENDUS — aucun autre."
+echo "$ignores cas ignoré(s), tous attendus et nommés dans $ATTENDUS ; aucun autre."

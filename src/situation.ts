@@ -127,7 +127,7 @@ export const INVENTAIRE: Inventory = [
     note: "the marginal population, not the book: these are the customers the control was stopping. Swept, not guessed." },
   { provenance: "assumed", name: "croyance",
     what: "the range the two functions will each defend for that share",
-    note: "not a confidence interval — nobody measured. It is what each side is prepared to argue." },
+    note: "not a confidence interval; nobody measured. It is what each side is prepared to argue." },
   { provenance: "chosen", name: "coutRisqueNonDetecte", what: "cost of one undetected risk",
     note: "fines, remediation and exit, averaged; a choice, and the verdict moves with it" },
 ];
